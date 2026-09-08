@@ -46,29 +46,28 @@ class FLauncher extends StatelessWidget {
         ),
         Consumer<LauncherState>(
           builder: (_, state, child) => Visibility(
-            child: child!,
+            visible: state.launcherVisible,
             replacement: const Center(
               child: AlternativeLauncherView()
             ),
-            visible: state.launcherVisible
-          ),
-          child: Scaffold(
-            backgroundColor: Colors.transparent,
-            appBar: FocusAwareAppBar(),
-            body: Padding(
-              padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
-              child: state.currentPage == LauncherState.dockPage
-                ? _dockPage(context, state)
-                : Consumer<AppsService>(
-                    builder: (context, appsService, _) {
-                      if (appsService.initialized) {
-                        return SingleChildScrollView(child: _sections(appsService.launcherSections));
+            child: Scaffold(
+              backgroundColor: Colors.transparent,
+              appBar: FocusAwareAppBar(),
+              body: Padding(
+                padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+                child: state.currentPage == LauncherState.dockPage
+                  ? _dockPage(context, state)
+                  : Consumer<AppsService>(
+                      builder: (context, appsService, _) {
+                        if (appsService.initialized) {
+                          return SingleChildScrollView(child: _sections(appsService.launcherSections));
+                        }
+                        else {
+                          return _emptyState(context);
+                        }
                       }
-                      else {
-                        return _emptyState(context);
-                      }
-                    }
-                  )
+                    )
+              )
             )
           )
         )

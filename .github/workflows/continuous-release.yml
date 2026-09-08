@@ -4,15 +4,22 @@ on:
   push:
     branches:
       - 'master'
+      - 'debug'
+    tags:
+      - 'v*'
     paths-ignore:
       - '**/*.md'
+  workflow_dispatch: {}
 
 permissions:
   contents: write
 
 jobs:
   debug-apk:
+    # 分支(master/debug)推送 → debug 构建,推到固定 tag "debug" 的 release,每次覆盖。
+    # 版本号与 BiliMT 一致:versionName=dev.rN,versionCode=1000000+N(N=构建号),保证可覆盖安装。
     name: Debug APK
+    if: ${{ github.ref_type == 'branch' }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -41,7 +48,7 @@ jobs:
       - name: Build debug APK
         run: |
           flutter --no-color build apk --debug \
-            --build-number $GITHUB_RUN_NUMBER \
+            --build-number $((1000000 + GITHUB_RUN_NUMBER)) \
             --build-name=dev.r$GITHUB_RUN_NUMBER
           cp build/app/outputs/flutter-apk/app-debug.apk build/app/outputs/flutter-apk/MTlauncher-debug.apk
       - name: Upload debug APK as artifact
@@ -65,8 +72,9 @@ jobs:
             return 1
           }
           APK=build/app/outputs/flutter-apk/MTlauncher-debug.apk
-          NOTES=$(printf '最新 master 分支 debug 构建,每次推送自动覆盖。\n固定下载地址: https://github.com/%s/releases/download/debug/MTlauncher-debug.apk\nversionName=dev.r%s\nversionCode=%s' \
-            "$GITHUB_REPOSITORY" "$GITHUB_RUN_NUMBER" "$GITHUB_RUN_NUMBER")
+          VERSION_CODE=$((1000000 + GITHUB_RUN_NUMBER))
+          NOTES=$(printf '最新分支 debug 构建,每次推送自动覆盖。\n固定下载地址: https://github.com/%s/releases/download/debug/MTlauncher-debug.apk\nversionName=dev.r%s\nversionCode=%s' \
+            "$GITHUB_REPOSITORY" "$GITHUB_RUN_NUMBER" "$VERSION_CODE")
           if retry_cmd gh release view debug --repo $GITHUB_REPOSITORY --json tagName > /dev/null 2>&1; then
             retry_cmd gh release edit debug --repo $GITHUB_REPOSITORY --notes "$NOTES"
             retry_cmd gh release upload debug --repo $GITHUB_REPOSITORY "$APK" --clobber
@@ -80,7 +88,10 @@ jobs:
           fi
 
   release-apk:
+    # 推 tag v* 才出 release,版本号唯一来源是 tag(与 BiliMT 一致):
+    # vX.Y.Z 为稳定版,带后缀(如 vX.Y.Z-alpha.N)为预发布。
     name: Release APK
+    if: ${{ startsWith(github.ref, 'refs/tags/v') }}
     env:
       OUTPUT_DIR: 'build/app/outputs/flutter-apk'
     runs-on: ubuntu-latest
@@ -97,28 +108,50 @@ jobs:
         with:
           distribution: 'temurin'
           java-version: '17'
-      - name: Verify environment
-        run: |
-          java --version
-          flutter doctor -v
-      - name: Set version variables
-        id: set_version_variables
-        run: |
-          cat version_numbers >> $GITHUB_OUTPUT
-          export $(cat version_numbers | xargs)
-          echo "FULL_VERSION_NUMBER=$(date '+%Y.%m').$(printf '%03d' $MONTH_VERSION_NUMBER)" >> $GITHUB_OUTPUT
-      - name: Build
+      - name: Restore release keystore
         env:
           FLAUNCHER_KEYSTORE_PASSWORD: ${{ secrets.FLAUNCHER_KEYSTORE_PASSWORD }}
           FLAUNCHER_SIGNING_KEY_ALIAS: ${{ secrets.FLAUNCHER_SIGNING_KEY_ALIAS }}
           FLAUNCHER_SIGNING_KEY_PASSWORD: ${{ secrets.FLAUNCHER_SIGNING_KEY_PASSWORD }}
           KEYSTORE_FILE_BASE64: ${{ secrets.KEYSTORE_FILE_BASE64 }}
-          BUILD_NUMBER: ${{ steps.set_version_variables.outputs.BUILD_NUMBER }}
-          FULL_VERSION_NUMBER: ${{ steps.set_version_variables.outputs.FULL_VERSION_NUMBER }}
+        run: |
+          echo -n "$KEYSTORE_FILE_BASE64" | base64 -d > android/app/upload-keystore.jks
+          echo "FLAUNCHER_KEYSTORE_PASSWORD=$FLAUNCHER_KEYSTORE_PASSWORD" >> $GITHUB_ENV
+          echo "FLAUNCHER_SIGNING_KEY_ALIAS=$FLAUNCHER_SIGNING_KEY_ALIAS" >> $GITHUB_ENV
+          echo "FLAUNCHER_SIGNING_KEY_PASSWORD=$FLAUNCHER_SIGNING_KEY_PASSWORD" >> $GITHUB_ENV
+      - name: Compute version from tag
+        id: version
+        env:
+          TAG_NAME: ${{ github.ref_name }}
+        run: |
+          # versionCode 与 App 端「检查更新」解析算法严格一致:
+          # major*1000000 + minor*100000 + patch*1000 + label(alpha=1,beta=2,rc=3)*100 + 序号
+          VERSION="${TAG_NAME#v}"
+          if [[ "$VERSION" =~ ^([0-9]+)\.([0-9]+)\.([0-9]+)(-([A-Za-z]+)\.([0-9]+))?$ ]]; then
+            LO=0
+            case "${BASH_REMATCH[5],,}" in
+              alpha) LO=1 ;;
+              beta) LO=2 ;;
+              rc) LO=3 ;;
+            esac
+            VERSION_CODE=$((BASH_REMATCH[1] * 1000000 + BASH_REMATCH[2] * 100000 + BASH_REMATCH[3] * 1000 + LO * 100 + BASH_REMATCH[6]))
+            echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
+            echo "VERSION_CODE=$VERSION_CODE" >> $GITHUB_OUTPUT
+            echo "Tag $TAG_NAME -> versionName=$VERSION versionCode=$VERSION_CODE"
+          else
+            echo "Invalid version tag: $TAG_NAME (expected vX.Y.Z or vX.Y.Z-alpha.N)" >&2
+            exit 1
+          fi
+      - name: Build release APK
+        env:
+          FLAUNCHER_KEYSTORE_PASSWORD: ${{ env.FLAUNCHER_KEYSTORE_PASSWORD }}
+          FLAUNCHER_SIGNING_KEY_ALIAS: ${{ env.FLAUNCHER_SIGNING_KEY_ALIAS }}
+          FLAUNCHER_SIGNING_KEY_PASSWORD: ${{ env.FLAUNCHER_SIGNING_KEY_PASSWORD }}
+          VERSION: ${{ steps.version.outputs.VERSION }}
+          VERSION_CODE: ${{ steps.version.outputs.VERSION_CODE }}
         run: |
           sudo apt install rename -y
-          echo -n "$KEYSTORE_FILE_BASE64" | base64 -d > android/app/upload-keystore.jks
-          flutter --no-color build apk --release --build-number $BUILD_NUMBER --build-name=$FULL_VERSION_NUMBER
+          flutter --no-color build apk --release --build-number $VERSION_CODE --build-name=$VERSION
           file-rename 's/app-(.*)-release.apk/MTlauncher-$1-release.apk/' $OUTPUT_DIR/*.apk
           mv $OUTPUT_DIR/app-release.apk $OUTPUT_DIR/MTlauncher-universal-release.apk
       - name: Upload APKs as artifact
@@ -130,15 +163,18 @@ jobs:
       - name: Create release
         env:
           GH_TOKEN: ${{ github.token }}
-          MONTH_VERSION_NUMBER: ${{ steps.set_version_variables.outputs.MONTH_VERSION_NUMBER }}
-          FULL_VERSION_NUMBER: ${{ steps.set_version_variables.outputs.FULL_VERSION_NUMBER }}
+          TAG_NAME: ${{ github.ref_name }}
         run: |
-          # 同 tag 的 release 已存在时改为覆盖上传,保证重复推送不失败
-          export TAG_NAME=v$FULL_VERSION_NUMBER
-          TITLE="Release #$MONTH_VERSION_NUMBER $(date '+%B %Y') ($FULL_VERSION_NUMBER)"
-          if gh release view $TAG_NAME --repo $GITHUB_REPOSITORY > /dev/null 2>&1; then
-            gh release edit $TAG_NAME --repo $GITHUB_REPOSITORY --latest --title "$TITLE"
-            gh release upload $TAG_NAME --repo $GITHUB_REPOSITORY $OUTPUT_DIR/MTlauncher-*.apk --clobber
+          # 同 tag 的 release 已存在时改为覆盖上传;带 "-" 的 tag(如 v1.0.0-alpha.1)标为 prerelease
+          EXTRA_ARGS=()
+          if [[ "$TAG_NAME" == *-* ]]; then
+            EXTRA_ARGS+=(--prerelease)
           else
-            gh release create $TAG_NAME --repo $GITHUB_REPOSITORY --latest --title "$TITLE" --notes "" $OUTPUT_DIR/MTlauncher-*.apk
+            EXTRA_ARGS+=(--latest)
+          fi
+          if gh release view "$TAG_NAME" --repo $GITHUB_REPOSITORY > /dev/null 2>&1; then
+            gh release edit "$TAG_NAME" --repo $GITHUB_REPOSITORY "${EXTRA_ARGS[@]}"
+            gh release upload "$TAG_NAME" --repo $GITHUB_REPOSITORY $OUTPUT_DIR/MTlauncher-*.apk --clobber
+          else
+            gh release create "$TAG_NAME" --repo $GITHUB_REPOSITORY --generate-notes --title "$TAG_NAME" "${EXTRA_ARGS[@]}" $OUTPUT_DIR/MTlauncher-*.apk
           fi

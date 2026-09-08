@@ -68,18 +68,34 @@ class UpdateService extends ChangeNotifier {
 
     try {
       final packageInfo = await PackageInfo.fromPlatform();
-      final release = kDebugMode ? await _checkDebugRelease() : await _checkLatestRelease();
-      final installed = kDebugMode
-          ? int.tryParse(packageInfo.buildNumber) ?? 0
-          : parseVersion(packageInfo.version) ?? 0;
-      final candidate = release?.versionCode ?? 0;
 
-      if (candidate > installed) {
-        _updateInfo = UpdateInfo(release!.versionName, release.downloadUrl, release.assetSize);
-        _status = UpdateStatus.available;
+      if (kDebugMode) {
+        final release = await _checkDebugRelease();
+        final installed = int.tryParse(packageInfo.buildNumber) ?? 0;
+
+        if (release.versionCode > installed) {
+          _updateInfo = UpdateInfo(release.versionName, release.downloadUrl, release.assetSize);
+          _status = UpdateStatus.available;
+        }
+        else {
+          _status = UpdateStatus.upToDate;
+        }
       }
       else {
-        _status = UpdateStatus.upToDate;
+        // 稳定版用户只收稳定版;版本名带 "-"(如 1.0.0-alpha.1)的用户可以收到预发布更新。
+        final release = await _checkLatestRelease(packageInfo.version);
+        final installedVersionCode = versionCodeFromVersionName(packageInfo.version) ?? 0;
+
+        // 旧月度版本(YYYY.MM.NNN)在新语义版本之前,视为已过期,直接提示更新。
+        final isLegacyMonthlyVersion = RegExp(r"^\d{4}\.\d{2}\.\d{3}$").hasMatch(packageInfo.version);
+
+        if (release.versionCode > installedVersionCode || isLegacyMonthlyVersion) {
+          _updateInfo = UpdateInfo(release.versionName, release.downloadUrl, release.assetSize);
+          _status = UpdateStatus.available;
+        }
+        else {
+          _status = UpdateStatus.upToDate;
+        }
       }
     }
     catch (e) {
@@ -165,23 +181,38 @@ class UpdateService extends ChangeNotifier {
     return installed;
   }
 
-  Future<_RemoteRelease> _checkLatestRelease() async {
-    final body = await _getJson("https://api.github.com/repos/$_repoOwner/$_repoName/releases/latest");
-    final tagName = body["tag_name"] as String? ?? "";
-    final versionName = tagName.startsWith("v") ? tagName.substring(1) : tagName;
-    final versionCode = parseVersion(versionName);
+  Future<_RemoteRelease?> _checkLatestRelease(String installedVersionName) async {
+    final body = await _getJson("https://api.github.com/repos/$_repoOwner/$_repoName/releases?per_page=30");
+    final releases = body as List? ?? [];
+    final includePrereleases = installedVersionName.contains("-");
 
-    if (versionCode == null) {
-      throw Exception("Unexpected release tag: $tagName");
+    _RemoteRelease? best;
+
+    for (final release in releases.cast<Map<String, dynamic>>()) {
+      if (release["draft"] == true) continue;
+      if (!includePrereleases && release["prerelease"] == true) continue;
+
+      final tagName = release["tag_name"] as String? ?? "";
+      final versionName = tagName.startsWith("v") ? tagName.substring(1) : tagName;
+      final versionCode = versionCodeFromVersionName(versionName);
+
+      if (versionCode == null) continue;
+      if (best != null && versionCode <= best.versionCode) continue;
+
+      final asset = _asset(release, _releaseAssetName);
+
+      best = _RemoteRelease(
+          versionName,
+          versionCode,
+          asset["browser_download_url"] as String,
+          asset["size"] as int);
     }
 
-    final asset = _asset(body, _releaseAssetName);
+    if (best == null) {
+      throw Exception("No eligible releases found");
+    }
 
-    return _RemoteRelease(
-        versionName,
-        versionCode,
-        asset["browser_download_url"] as String,
-        asset["size"] as int);
+    return best;
   }
 
   Future<_RemoteRelease> _checkDebugRelease() async {
@@ -211,14 +242,14 @@ class UpdateService extends ChangeNotifier {
         orElse: () => throw Exception("Release asset not found: $name"));
   }
 
-  Future<Map<String, dynamic>> _getJson(String url) async {
+  Future<dynamic> _getJson(String url) async {
     final response = await _get(url);
 
     if (response.statusCode != 200) {
       throw Exception("GitHub API returned HTTP ${response.statusCode}");
     }
 
-    return jsonDecode(utf8.decode(response.bodyBytes)) as Map<String, dynamic>;
+    return jsonDecode(utf8.decode(response.bodyBytes));
   }
 
   Future<http.Response> _get(String url) async {
@@ -257,12 +288,24 @@ class _RemoteRelease {
   const _RemoteRelease(this.versionName, this.versionCode, this.downloadUrl, this.assetSize);
 }
 
-int? parseVersion(String version) {
-  final numbers = version.split(".").map(int.tryParse).toList();
+/// 把语义版本名解析成可比较的 versionCode,权重与 CI 端算法严格一致
+/// (见 .github/workflows/continuous-release.yml):
+/// major*1000000 + minor*100000 + patch*1000 + label(alpha=1,beta=2,rc=3)*100 + 序号。
+/// 版本名不符合语义版本格式(如旧月度版本以外的异常值)时返回 null。
+int? versionCodeFromVersionName(String versionName) {
+  final match = RegExp(r"^(\d+)\.(\d+)\.(\d+)(?:-([a-zA-Z]+)\.(\d+))?$")
+      .firstMatch(versionName);
 
-  if (numbers.length != 3 || numbers.any((number) => number == null)) {
+  if (match == null) {
     return null;
   }
 
-  return numbers[0]! * 1000000 + numbers[1]! * 1000 + numbers[2]!;
+  final label = match.group(4)?.toLowerCase();
+  final labelOrder = label == "alpha" ? 1 : label == "beta" ? 2 : label == "rc" ? 3 : 0;
+
+  return int.parse(match.group(1)!) * 1000000
+      + int.parse(match.group(2)!) * 100000
+      + int.parse(match.group(3)!) * 1000
+      + labelOrder * 100
+      + (int.tryParse(match.group(5) ?? "0") ?? 0);
 }

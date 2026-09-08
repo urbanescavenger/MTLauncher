@@ -16,6 +16,7 @@
     "dateAndTimeFormat": "Date and time format",
     "delete": "Delete",
     "dialogOptionBackButtonActionDoNothing": "Do nothing",
+    "dockEmptyHint": "No pinned apps. Long-press an app and select \"Pin to dock\".",
     "dialogOptionBackButtonActionShowScreensaver": "Show screensaver",
     "dialogOptionBackButtonActionShowClock": "Show clock",
     "dialogTextNoFileExplorer": "Please install a file explorer in order to pick a picture.",
@@ -63,6 +64,7 @@
     "open": "Open",
     "orSelectFormatSpecifiers": "Or select format specifiers",
     "picture": "Picture",
+    "pinToDock": "Pin to dock",
     "removeFrom": "Remove from {name}",
     "@removeFrom": {
         "placeholders": {
@@ -98,6 +100,7 @@
     "typeInTheDateFormat": "Type in the date format",
     "typeInTheHourFormat": "Type in the hour format",
     "uninstall": "Uninstall",
+    "unpinFromDock": "Unpin from dock",
     "wallpaper": "Wallpaper",
     "withEllipsisAddTo": "Add to..."
 }

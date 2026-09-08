@@ -18,6 +18,7 @@
 
 import 'package:flauncher/database.dart';
 import 'package:flauncher/providers/apps_service.dart';
+import 'package:flauncher/providers/dock_service.dart';
 import 'package:flauncher/widgets/right_panel_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -31,11 +32,13 @@ class ApplicationInfoPanel extends StatelessWidget
   final Category? category;
   final App application;
   final ImageProvider? applicationIcon;
+  final bool dockContext;
 
   const ApplicationInfoPanel({
-    required this.category,
+    this.category,
     required this.application,
-    this.applicationIcon
+    this.applicationIcon,
+    this.dockContext = false
   });
 
   @override
@@ -92,7 +95,7 @@ class ApplicationInfoPanel extends StatelessWidget
                        Navigator.of(context).pop(ApplicationInfoPanelResult.none);
                      },
                    ),
-                   if (category?.sort == CategorySort.manual)
+                   if (category?.sort == CategorySort.manual || dockContext)
                      TextButton(
                        child: Row(
                          children: [
@@ -103,6 +106,27 @@ class ApplicationInfoPanel extends StatelessWidget
                        ),
                        onPressed: () => Navigator.of(context).pop(ApplicationInfoPanelResult.reorderApp),
                      ),
+                   TextButton(
+                     child: Row(
+                       children: [
+                         Icon(context.watch<DockService>().isPinned(application.packageName)
+                             ? Icons.push_pin
+                             : Icons.push_pin_outlined),
+                         Container(width: 8),
+                         Flexible(
+                           child: Text(
+                             context.watch<DockService>().isPinned(application.packageName)
+                                 ? localizations.unpinFromDock
+                                 : localizations.pinToDock,
+                             style: Theme.of(context).textTheme.bodyMedium,
+                             maxLines: 2,
+                             overflow: TextOverflow.ellipsis,
+                           ),
+                         ),
+                       ],
+                     ),
+                     onPressed: () => context.read<DockService>().togglePin(application.packageName),
+                   ),
                    TextButton(
                      child: Row(
                        children: [

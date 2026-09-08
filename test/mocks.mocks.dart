@@ -587,6 +587,21 @@ class MockAppsService extends _i1.Mock implements _i14.AppsService {
       ) as List<_i15.App>);
 
   @override
+  _i15.App? getApplication(String? packageName) => (super.noSuchMethod(
+        Invocation.method(
+          #getApplication,
+          [packageName],
+        ),
+        returnValue: null,
+      ) as _i15.App?);
+
+  @override
+  List<_i16.LauncherSection> get launcherSections => (super.noSuchMethod(
+        Invocation.getter(#launcherSections),
+        returnValue: <_i16.LauncherSection>[],
+      ) as List<_i16.LauncherSection>);
+
+  @override
   List<_i16.Category> get categories => (super.noSuchMethod(
         Invocation.getter(#categories),
         returnValue: <_i16.Category>[],

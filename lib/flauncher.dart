@@ -23,9 +23,11 @@ import 'package:flauncher/providers/launcher_state.dart';
 import 'package:flauncher/providers/wallpaper_service.dart';
 import 'package:flauncher/widgets/apps_grid.dart';
 import 'package:flauncher/widgets/category_row.dart';
+import 'package:flauncher/widgets/dock_bar.dart';
 import 'package:flauncher/widgets/launcher_alternative_view.dart';
 import 'package:flauncher/widgets/focus_aware_app_bar.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
@@ -55,21 +57,40 @@ class FLauncher extends StatelessWidget {
             appBar: FocusAwareAppBar(),
             body: Padding(
               padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
-              child: Consumer<AppsService>(
-                builder: (context, appsService, _) {
-                  if (appsService.initialized) {
-                    return SingleChildScrollView(child: _sections(appsService.launcherSections));
-                  }
-                  else {
-                    return _emptyState(context);
-                  }
-                }
-              )
+              child: state.currentPage == LauncherState.dockPage
+                ? _dockPage(context, state)
+                : Consumer<AppsService>(
+                    builder: (context, appsService, _) {
+                      if (appsService.initialized) {
+                        return SingleChildScrollView(child: _sections(appsService.launcherSections));
+                      }
+                      else {
+                        return _emptyState(context);
+                      }
+                    }
+                  )
             )
           )
         )
       ]
     )
+  );
+
+  Widget _dockPage(BuildContext context, LauncherState state) => Focus(
+    skipTraversal: true,
+    onKeyEvent: (node, event) {
+      if (event is KeyDownEvent && event.logicalKey == LogicalKeyboardKey.arrowDown) {
+        state.showAppsPage();
+        return KeyEventResult.handled;
+      }
+      return KeyEventResult.ignored;
+    },
+    child: Column(
+      children: [
+        const Expanded(child: AlternativeLauncherView()),
+        const DockBar(),
+      ],
+    ),
   );
 
   Widget _sections(List<LauncherSection> sections) => Column(

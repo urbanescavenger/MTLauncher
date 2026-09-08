@@ -29,15 +29,34 @@ class LauncherState extends ChangeNotifier
 {
   bool _isDefaultLauncher;
   bool _launcherVisible;
+  int _currentPage;
+
+  static const int dockPage = 0;
+  static const int appsPage = 1;
 
   bool  get isDefaultLauncher => _isDefaultLauncher;
   bool  get launcherVisible => _launcherVisible;
+  int   get currentPage => _currentPage;
 
-  LauncherState() : _isDefaultLauncher = false, _launcherVisible = true;
+  LauncherState() : _isDefaultLauncher = false, _launcherVisible = true, _currentPage = dockPage;
 
   void toggleLauncherVisibility() {
     _launcherVisible = !_launcherVisible;
     notifyListeners();
+  }
+
+  void showAppsPage() {
+    if (_currentPage != appsPage) {
+      _currentPage = appsPage;
+      notifyListeners();
+    }
+  }
+
+  void showDockPage() {
+    if (_currentPage != dockPage) {
+      _currentPage = dockPage;
+      notifyListeners();
+    }
   }
 
   Future<void> refresh(AppsService appsService) async {
@@ -46,6 +65,11 @@ class LauncherState extends ChangeNotifier
   }
 
   void handleBackNavigation(BuildContext context) {
+    if (_currentPage == appsPage) {
+      showDockPage();
+      return;
+    }
+
     AppsService appsService = context.read<AppsService>();
     LauncherState launcherState = context.read<LauncherState>();
     SettingsService settingsService = context.read<SettingsService>();

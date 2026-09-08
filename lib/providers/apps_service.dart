@@ -44,6 +44,8 @@ class AppsService extends ChangeNotifier
 
   List<App> get applications => UnmodifiableListView(_applications.values.sortedBy((application) => application.name));
 
+  App? getApplication(String packageName) => _applications[packageName];
+
   List<LauncherSection> get launcherSections => List.unmodifiable(_launcherSections);
   List<Category> get categories => _categoriesById.values
       .map((category) => category.unmodifiable())

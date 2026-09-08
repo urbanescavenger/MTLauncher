@@ -26,6 +26,7 @@ import 'package:flauncher/widgets/settings/date_time_format_dialog.dart';
 import 'package:flauncher/widgets/settings/flauncher_about_dialog.dart';
 import 'package:flauncher/widgets/settings/status_bar_panel_page.dart';
 import 'package:flauncher/widgets/settings/wallpaper_panel_page.dart';
+import 'package:flauncher/widgets/settings/weather_panel_page.dart';
 import 'package:flutter/material.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:provider/provider.dart';
@@ -94,6 +95,16 @@ class SettingsPanelPage extends StatelessWidget {
                       ],
                     ),
                     onPressed: () => Navigator.of(context).pushNamed(StatusBarPanelPage.routeName),
+                  ),
+                  TextButton(
+                    child: Row(
+                      children: [
+                        const Icon(Icons.cloud_outlined),
+                        Container(width: 8),
+                        Text(localizations.weather, style: Theme.of(context).textTheme.bodyMedium),
+                      ],
+                    ),
+                    onPressed: () => Navigator.of(context).pushNamed(WeatherPanelPage.routeName),
                   ),
                   const Divider(),
                   TextButton(

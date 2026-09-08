@@ -34,6 +34,8 @@ const _showCategoryTitles = "show_category_titles";
 const _showDateInStatusBar = "show_date_in_status_bar";
 const _showTimeInStatusBar = "show_time_in_status_bar";
 const _timeFormat = "time_format";
+const _weatherEnabledKey = "weather_enabled";
+const _weatherLocationKey = "weather_location";
 
 class SettingsService extends ChangeNotifier {
   static final defaultDateFormat = "EEEE d";
@@ -70,6 +72,13 @@ class SettingsService extends ChangeNotifier {
   String get dateFormat => _sharedPreferences.getString(_dateFormat) ?? defaultDateFormat;
 
   String get timeFormat => _sharedPreferences.getString(_timeFormat) ?? defaultTimeFormat;
+
+  bool get weatherEnabled => _sharedPreferences.getBool(_weatherEnabledKey) ?? false;
+
+  String? get weatherLocationJson {
+    final value = _sharedPreferences.getString(_weatherLocationKey);
+    return value == null || value.isEmpty ? null : value;
+  }
 
   SettingsService(
     this._sharedPreferences
@@ -138,5 +147,18 @@ class SettingsService extends ChangeNotifier {
 
   Future<void> setShowTimeInStatusBar(bool show) async {
     return set(_showTimeInStatusBar, show);
+  }
+
+  Future<void> setWeatherEnabled(bool value) async {
+    return set(_weatherEnabledKey, value);
+  }
+
+  Future<void> setWeatherLocationJson(String? value) async {
+    if (value == null || value.isEmpty) {
+      await _sharedPreferences.remove(_weatherLocationKey);
+    } else {
+      await _sharedPreferences.setString(_weatherLocationKey, value);
+    }
+    notifyListeners();
   }
 }

@@ -26,6 +26,7 @@ import 'package:flauncher/providers/network_service.dart';
 import 'package:flauncher/providers/settings_service.dart';
 import 'package:flauncher/providers/update_service.dart';
 import 'package:flauncher/providers/wallpaper_service.dart';
+import 'package:flauncher/providers/weather_service.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -46,6 +47,11 @@ Future<void> main() async {
         ChangeNotifierProvider(
             create: (_) => SettingsService(sharedPreferences),
             lazy: false),
+        ChangeNotifierProvider(
+            create: (context) => WeatherService(
+                sharedPreferences,
+                Provider.of<SettingsService>(context, listen: false))
+        ),
         ChangeNotifierProvider(create: (_) => AppsService(fLauncherChannel, fLauncherDatabase, sharedPreferences)),
         ChangeNotifierProvider(create: (_) => LauncherState()),
         ChangeNotifierProvider(create: (_) => NetworkService(fLauncherChannel)),

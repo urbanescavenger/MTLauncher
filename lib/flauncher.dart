@@ -28,6 +28,7 @@ import 'package:flauncher/widgets/category_row.dart';
 import 'package:flauncher/widgets/focus_guard.dart';
 import 'package:flauncher/widgets/launcher_alternative_view.dart';
 import 'package:flauncher/widgets/focus_aware_app_bar.dart';
+import 'package:flauncher/widgets/weather_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
@@ -80,6 +81,18 @@ class FLauncher extends StatelessWidget {
                       ? _categoriesPage(context)
                       : _allAppsPage(context)
                 )
+              )
+            )
+          )
+        ),
+        Consumer<LauncherState>(
+          builder: (_, state, __) => Visibility(
+            visible: state.launcherVisible && state.currentPage == LauncherState.favoritesPage,
+            child: const Align(
+              alignment: Alignment.topLeft,
+              child: Padding(
+                padding: EdgeInsets.all(16),
+                child: WeatherWidget()
               )
             )
           )

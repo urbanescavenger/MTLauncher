@@ -24,6 +24,7 @@ import 'package:flauncher/widgets/settings/launcher_section_panel_page.dart';
 import 'package:flauncher/widgets/settings/settings_panel_page.dart';
 import 'package:flauncher/widgets/settings/status_bar_panel_page.dart';
 import 'package:flauncher/widgets/settings/wallpaper_panel_page.dart';
+import 'package:flauncher/widgets/settings/weather_panel_page.dart';
 import 'package:flutter/material.dart';
 
 class SettingsPanel extends StatefulWidget {
@@ -56,6 +57,8 @@ class _SettingsPanelState extends State<SettingsPanel> {
                 return MaterialPageRoute(builder: (_) => WallpaperPanelPage());
               case StatusBarPanelPage.routeName:
                 return MaterialPageRoute(builder: (_) => StatusBarPanelPage());
+              case WeatherPanelPage.routeName:
+                return MaterialPageRoute(builder: (_) => WeatherPanelPage());
               case GradientPanelPage.routeName:
                 return MaterialPageRoute(builder: (_) => GradientPanelPage());
               case ApplicationsPanelPage.routeName:

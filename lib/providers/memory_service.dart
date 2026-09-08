@@ -24,7 +24,7 @@ import 'package:flutter/services.dart' show PlatformException;
 
 class MemoryService extends ChangeNotifier {
   final FLauncherChannel _fLauncherChannel;
-  final Timer _refreshTimer;
+  late final Timer _refreshTimer;
 
   /// Total device memory in bytes, 0 until the first successful read.
   int totalMem = 0;
@@ -43,9 +43,9 @@ class MemoryService extends ChangeNotifier {
   bool _cleaning = false;
   bool get cleaning => _cleaning;
 
-  MemoryService(this._fLauncherChannel)
-      : _refreshTimer = Timer.periodic(const Duration(seconds: 30), (_) => _refresh()) {
+  MemoryService(this._fLauncherChannel) {
     _refresh();
+    _refreshTimer = Timer.periodic(const Duration(seconds: 30), (_) => _refresh());
   }
 
   @override

@@ -126,6 +126,8 @@
     "textNoApplicationsToAdd": "All applications are already in this section.",
     "weather": "Weather",
     "weatherShowWeather": "Show weather",
+    "weatherAutoLocate": "Detect location automatically",
+    "weatherLocating": "Detecting location…",
     "weatherLocation": "Location",
     "weatherChooseCity": "Choose city",
     "weatherSearchHint": "Type a city name to search",

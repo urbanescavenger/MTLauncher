@@ -47,21 +47,40 @@ class WeatherPanelPage extends StatelessWidget {
             title: Text(localizations.weatherShowWeather, style: Theme.of(context).textTheme.bodyMedium),
             secondary: Icon(Icons.cloud_outlined),
           ),
+          RoundedSwitchListTile(
+            value: settingsService.weatherAutoLocation,
+            onChanged: (value) => settingsService.setWeatherAutoLocation(value),
+            title: Text(localizations.weatherAutoLocate, style: Theme.of(context).textTheme.bodyMedium),
+            secondary: Icon(Icons.my_location),
+          ),
           Divider(),
-          TextButton(
-            child: Row(
+          if (settingsService.weatherAutoLocation)
+            Row(
               children: [
                 const Icon(Icons.place),
                 Container(width: 8),
-                Flexible(child: Text(
-                  location?.label ?? localizations.weatherNoLocation,
+                Expanded(child: Text(
+                  location?.label ?? localizations.weatherLocating,
                   style: Theme.of(context).textTheme.bodyMedium,
                   overflow: TextOverflow.ellipsis,
                 )),
               ],
+            )
+          else
+            TextButton(
+              child: Row(
+                children: [
+                  const Icon(Icons.place),
+                  Container(width: 8),
+                  Flexible(child: Text(
+                    location?.label ?? localizations.weatherNoLocation,
+                    style: Theme.of(context).textTheme.bodyMedium,
+                    overflow: TextOverflow.ellipsis,
+                  )),
+                ],
+              ),
+              onPressed: () async => await _chooseCityDialog(context),
             ),
-            onPressed: () async => await _chooseCityDialog(context),
-          ),
         ],
       );
   }

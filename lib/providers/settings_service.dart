@@ -35,6 +35,7 @@ const _showDateInStatusBar = "show_date_in_status_bar";
 const _showTimeInStatusBar = "show_time_in_status_bar";
 const _timeFormat = "time_format";
 const _weatherEnabledKey = "weather_enabled";
+const _weatherAutoLocationKey = "weather_auto_location";
 const _weatherLocationKey = "weather_location";
 
 class SettingsService extends ChangeNotifier {
@@ -74,6 +75,8 @@ class SettingsService extends ChangeNotifier {
   String get timeFormat => _sharedPreferences.getString(_timeFormat) ?? defaultTimeFormat;
 
   bool get weatherEnabled => _sharedPreferences.getBool(_weatherEnabledKey) ?? false;
+
+  bool get weatherAutoLocation => _sharedPreferences.getBool(_weatherAutoLocationKey) ?? true;
 
   String? get weatherLocationJson {
     final value = _sharedPreferences.getString(_weatherLocationKey);
@@ -151,6 +154,10 @@ class SettingsService extends ChangeNotifier {
 
   Future<void> setWeatherEnabled(bool value) async {
     return set(_weatherEnabledKey, value);
+  }
+
+  Future<void> setWeatherAutoLocation(bool value) async {
+    return set(_weatherAutoLocationKey, value);
   }
 
   Future<void> setWeatherLocationJson(String? value) async {

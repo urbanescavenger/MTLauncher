@@ -66,7 +66,7 @@ class WeatherData {
   factory WeatherData.fromJson(Map<String, dynamic> json) => WeatherData(
     temperature: (json["temperature_2m"] as num?)?.toDouble() ?? 0,
     weatherCode: json["weather_code"] as int? ?? -1,
-    isDay: json["is_day"] as int? == 1,
+    isDay: (json["is_day"] as int?) == 1,
     fetchedAt: DateTime.now(),
   );
 

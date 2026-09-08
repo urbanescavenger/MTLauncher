@@ -130,6 +130,8 @@
     "textNoApplicationsToAdd": "Todas las aplicaciones ya están en esta sección.",
     "weather": "El tiempo",
     "weatherShowWeather": "Mostrar el tiempo",
+    "weatherAutoLocate": "Detectar ubicación automáticamente",
+    "weatherLocating": "Detectando ubicación…",
     "weatherLocation": "Ubicación",
     "weatherChooseCity": "Elegir ciudad",
     "weatherSearchHint": "Escribe el nombre de una ciudad para buscar",

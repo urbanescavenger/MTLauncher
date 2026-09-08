@@ -83,6 +83,8 @@
     "textNoApplicationsToAdd": "所有应用都已在该分区中。",
     "weather": "天气",
     "weatherShowWeather": "显示天气",
+    "weatherAutoLocate": "自动定位",
+    "weatherLocating": "正在定位…",
     "weatherLocation": "位置",
     "weatherChooseCity": "选择城市",
     "weatherSearchHint": "输入城市名进行搜索",

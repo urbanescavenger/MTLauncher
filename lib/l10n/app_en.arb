@@ -11,6 +11,7 @@
     "backButtonAction": "Back button action",
     "category": "Category",
     "categories": "Categories",
+    "checkForUpdates": "Check for updates",
     "columnCount": "Column count",
     "date": "Date",
     "dateAndTimeFormat": "Date and time format",
@@ -101,6 +102,23 @@
     "typeInTheHourFormat": "Type in the hour format",
     "uninstall": "Uninstall",
     "unpinFromDock": "Unpin from dock",
+    "updateAvailableTo": "New version {version} available. Select to download.",
+    "@updateAvailableTo": {
+        "placeholders": {
+            "version": { "type": "String" }
+        }
+    },
+    "updateChecking": "Checking for updates…",
+    "updateCheckFailed": "Update check failed. Select to retry.",
+    "updateDownloading": "Downloading update… {progress}",
+    "@updateDownloading": {
+        "placeholders": {
+            "progress": { "type": "String" }
+        }
+    },
+    "updateReadyToInstall": "Update downloaded. Select to install.",
+    "appUpToDate": "Up to date",
+    "allowUnknownSourcesFirst": "Allow installing unknown apps from this app in system settings, then try again.",
     "wallpaper": "Wallpaper",
     "withEllipsisAddTo": "Add to..."
 }

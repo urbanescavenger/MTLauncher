@@ -55,6 +55,12 @@ class FLauncherChannel {
 
   Future<bool> isDefaultLauncher() async => await _methodChannel.invokeMethod('isDefaultLauncher');
 
+  Future<bool> installApk(String path) async => await _methodChannel.invokeMethod('installApk', path);
+
+  Future<bool> canInstallPackages() async => await _methodChannel.invokeMethod('canInstallPackages');
+
+  Future<bool> openUnknownSourcesSettings() async => await _methodChannel.invokeMethod('openUnknownSourcesSettings');
+
   Future<bool> checkForGetContentAvailability() async =>
       await _methodChannel.invokeMethod("checkForGetContentAvailability");
 

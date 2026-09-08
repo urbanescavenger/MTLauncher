@@ -39,6 +39,8 @@ if (flutterVersionName == null) {
     flutterVersionName = '1.0'
 }
 
+def hasReleaseKeystore = System.getenv('FLAUNCHER_KEYSTORE_PASSWORD') != null && file("upload-keystore.jks").exists()
+
 def secretProperties = new Properties()
 secretProperties.setProperty("signing_keystore_password", "${System.getenv('FLAUNCHER_KEYSTORE_PASSWORD')}")
 secretProperties.setProperty("signing_key_password", "${System.getenv('FLAUNCHER_SIGNING_KEY_PASSWORD')}")
@@ -66,7 +68,10 @@ android {
 
     buildTypes {
         debug {
-            signingConfig signingConfigs.debug
+            // CI 用同一个 release keystore 签 debug 包,保证跨次构建签名一致、可覆盖安装;
+            // 本地无 keystore 环境时回退默认 debug 签名。
+            applicationIdSuffix ".debug"
+            signingConfig hasReleaseKeystore ? signingConfigs.release : signingConfigs.debug
         }
         release {
             minifyEnabled true
@@ -94,4 +99,8 @@ android {
 
 flutter {
     source '../..'
+}
+
+dependencies {
+    implementation "androidx.core:core:1.13.1"
 }

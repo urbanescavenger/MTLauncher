@@ -18,6 +18,7 @@
 
 import 'package:flauncher/providers/apps_service.dart';
 import 'package:flauncher/providers/settings_service.dart';
+import 'package:flauncher/providers/update_service.dart';
 import 'package:flauncher/widgets/ensure_visible.dart';
 import 'package:flauncher/widgets/settings/applications_panel_page.dart';
 import 'package:flauncher/widgets/settings/launcher_sections_panel_page.dart';
@@ -145,6 +146,25 @@ class SettingsPanelPage extends StatelessWidget {
                       secondary: Icon(Icons.abc)
                   ),
                   const Divider(),
+                  Consumer<UpdateService>(
+                    builder: (context, updateService, __) => TextButton(
+                      onPressed: updateService.status == UpdateStatus.downloading
+                          || updateService.status == UpdateStatus.checking
+                          ? null
+                          : () => _onUpdatePressed(context),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.system_update),
+                          Container(width: 8),
+                          Flexible(child: Text(
+                            _updateButtonLabel(context, updateService),
+                            style: Theme.of(context).textTheme.bodyMedium,
+                            overflow: TextOverflow.ellipsis,
+                          )),
+                        ],
+                      ),
+                    ),
+                  ),
                   TextButton(
                     child: Row(
                       children: [
@@ -170,6 +190,57 @@ class SettingsPanelPage extends StatelessWidget {
         ]
       )
     );
+  }
+
+  void _onUpdatePressed(BuildContext context) {
+    UpdateService updateService = context.read<UpdateService>();
+
+    if (updateService.status == UpdateStatus.available) {
+      updateService.download();
+    }
+    else if (updateService.status == UpdateStatus.downloaded) {
+      updateService.install().then((installed) {
+        if (!installed && context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            content: Text(AppLocalizations.of(context)!.allowUnknownSourcesFirst),
+          ));
+        }
+      });
+    }
+    else {
+      updateService.check();
+    }
+  }
+
+  String _updateButtonLabel(BuildContext context, UpdateService updateService) {
+    AppLocalizations localizations = AppLocalizations.of(context)!;
+    UpdateStatus status = updateService.status;
+
+    if (status == UpdateStatus.checking) {
+      return localizations.updateChecking;
+    }
+    else if (status == UpdateStatus.available) {
+      return localizations.updateAvailableTo(updateService.updateInfo!.version);
+    }
+    else if (status == UpdateStatus.downloading) {
+      int total = updateService.updateInfo?.size ?? 0;
+      String progress = total > 0
+          ? "${updateService.receivedBytes * 100 ~/ total}%"
+          : "${updateService.receivedBytes}";
+      return localizations.updateDownloading(progress);
+    }
+    else if (status == UpdateStatus.downloaded) {
+      return localizations.updateReadyToInstall;
+    }
+    else if (status == UpdateStatus.upToDate) {
+      return localizations.appUpToDate;
+    }
+    else if (status == UpdateStatus.failed) {
+      return localizations.updateCheckFailed;
+    }
+    else {
+      return localizations.checkForUpdates;
+    }
   }
 
   Future<void> _backButtonActionDialog(BuildContext context) async {

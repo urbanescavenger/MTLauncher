@@ -32,6 +32,7 @@ import android.provider.Settings;
 import android.util.Pair;
 
 import androidx.annotation.NonNull;
+import androidx.core.content.FileProvider;
 
 import io.flutter.embedding.android.FlutterActivity;
 import io.flutter.embedding.engine.FlutterEngine;
@@ -40,6 +41,7 @@ import io.flutter.plugin.common.EventChannel;
 import io.flutter.plugin.common.MethodChannel;
 
 import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -78,6 +80,9 @@ public class MainActivity extends FlutterActivity
                 case "openAppInfo" -> result.success(openAppInfo(call.arguments()));
                 case "uninstallApp" -> result.success(uninstallApp(call.arguments()));
                 case "isDefaultLauncher" -> result.success(isDefaultLauncher());
+                case "installApk" -> result.success(installApk(call.arguments()));
+                case "canInstallPackages" -> result.success(canInstallPackages());
+                case "openUnknownSourcesSettings" -> result.success(openUnknownSourcesSettings());
                 case "checkForGetContentAvailability" -> result.success(checkForGetContentAvailability());
                 case "startAmbientMode" -> result.success(startAmbientMode());
                 case "getActiveNetworkInformation" -> result.success(getActiveNetworkInformation());
@@ -320,6 +325,36 @@ public class MainActivity extends FlutterActivity
     private boolean uninstallApp(String packageName) {
         Intent intent = new Intent(Intent.ACTION_DELETE)
                 .setData(Uri.fromParts("package", packageName, null));
+
+        return tryStartActivity(intent);
+    }
+
+    private boolean installApk(String path) {
+        File file = new File(path);
+
+        if (!file.exists()) {
+            return false;
+        }
+
+        Uri uri = FileProvider.getUriForFile(this, getPackageName() + ".fileprovider", file);
+        Intent intent = new Intent(Intent.ACTION_VIEW)
+                .setDataAndType(uri, "application/vnd.android.package-archive")
+                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_GRANT_READ_URI_PERMISSION);
+
+        return tryStartActivity(intent);
+    }
+
+    private boolean canInstallPackages() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            return getPackageManager().canRequestPackageInstalls();
+        }
+
+        return true;
+    }
+
+    private boolean openUnknownSourcesSettings() {
+        Intent intent = new Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES)
+                .setData(Uri.fromParts("package", getPackageName(), null));
 
         return tryStartActivity(intent);
     }

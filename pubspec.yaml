@@ -12,6 +12,7 @@ dependencies:
     sdk: flutter
 
   image_picker: ^1.0.7
+  http: ^1.2.2
   intl: any
   drift: ^2.14.1
   drift_local_storage_inspector: ^0.7.0

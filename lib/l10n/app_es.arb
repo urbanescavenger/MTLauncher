@@ -11,6 +11,7 @@
     "backButtonAction": "Acción del botón 'Atrás'",
     "category": "Categoría",
     "categories": "Categorías",
+    "checkForUpdates": "Buscar actualizaciones",
     "columnCount": "Cantidad de columnas",
     "date": "Fecha",
     "dateAndTimeFormat": "Formato de fecha y hora",
@@ -105,6 +106,23 @@
     "typeInTheHourFormat": "Escriba el formato de hora",
     "uninstall": "Desinstalar",
     "unpinFromDock": "Quitar de la barra",
+    "updateAvailableTo": "Nueva versión {version} disponible. Selecciona para descargar.",
+    "@updateAvailableTo": {
+        "placeholders": {
+            "version": { "type": "String" }
+        }
+    },
+    "updateChecking": "Buscando actualizaciones…",
+    "updateCheckFailed": "Error al buscar actualizaciones. Selecciona para reintentar.",
+    "updateDownloading": "Descargando actualización… {progress}",
+    "@updateDownloading": {
+        "placeholders": {
+            "progress": { "type": "String" }
+        }
+    },
+    "updateReadyToInstall": "Actualización descargada. Selecciona para instalar.",
+    "appUpToDate": "Ya está actualizado",
+    "allowUnknownSourcesFirst": "Permite instalar aplicaciones desconocidas desde esta app en los ajustes del sistema y vuelve a intentarlo.",
     "wallpaper": "Fondo de pantalla",
     "withEllipsisAddTo": "Añadir a..."
 }

@@ -81,6 +81,17 @@ android {
         }
     }
 
+    // release 构建按 ABI 拆包(另出一个 universal 整包);debug 构建不匹配 assembleRelease,保持单包。
+    // 只列 Flutter 引擎实际提供的架构,避免产出无原生库、装了必崩的壳包。
+    splits {
+        abi {
+            enable gradle.startParameter.taskNames.any { it.contains("assembleRelease") }
+            reset()
+            include "armeabi-v7a", "arm64-v8a", "x86_64"
+            universalApk true
+        }
+    }
+
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_17
         targetCompatibility JavaVersion.VERSION_17

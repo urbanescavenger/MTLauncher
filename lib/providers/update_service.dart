@@ -28,7 +28,8 @@ import 'package:path_provider/path_provider.dart';
 const _repoOwner = "urbanescavenger";
 const _repoName = "MTLauncher";
 const _debugAssetName = "MTlauncher-debug.apk";
-const _releaseAssetName = "MTlauncher-universal-release.apk";
+// CI release 实际发布的分包架构(见 android/app/build.gradle 的 splits 配置)
+const _releaseAssetAbis = ["arm64-v8a", "armeabi-v7a", "x86_64"];
 const _downloadFileName = "MTlauncher-update.apk";
 
 enum UpdateStatus { idle, checking, upToDate, available, downloading, downloaded, failed }
@@ -187,7 +188,10 @@ class UpdateService extends ChangeNotifier {
     final releases = body as List? ?? [];
     final includePrereleases = installedVersionName.contains("-");
 
-    _RemoteRelease? best;
+    final abi = preferredAbi(await _channel.getSupportedAbis());
+
+    Map<String, dynamic>? best;
+    var bestVersionCode = -1;
 
     for (final release in releases.cast<Map<String, dynamic>>()) {
       if (release["draft"] == true) continue;
@@ -198,22 +202,25 @@ class UpdateService extends ChangeNotifier {
       final versionCode = versionCodeFromVersionName(versionName);
 
       if (versionCode == null) continue;
-      if (best != null && versionCode <= best.versionCode) continue;
+      if (versionCode <= bestVersionCode) continue;
 
-      final asset = _asset(release, _releaseAssetName);
-
-      best = _RemoteRelease(
-          versionName,
-          versionCode,
-          asset["browser_download_url"] as String,
-          asset["size"] as int);
+      best = release;
+      bestVersionCode = versionCode;
     }
 
     if (best == null) {
       throw Exception("No eligible releases found");
     }
 
-    return best;
+    final tagName = best["tag_name"] as String;
+    final versionName = tagName.startsWith("v") ? tagName.substring(1) : tagName;
+    final asset = _releaseAsset(best, tagName, abi);
+
+    return _RemoteRelease(
+        versionName,
+        bestVersionCode,
+        asset["browser_download_url"] as String,
+        asset["size"] as int);
   }
 
   Future<_RemoteRelease> _checkDebugRelease() async {
@@ -235,12 +242,37 @@ class UpdateService extends ChangeNotifier {
         asset["size"] as int);
   }
 
-  Map<String, dynamic> _asset(Map<String, dynamic> release, String name) {
+  /// 按设备架构挑 release 的下载资产:优先 `MTlauncher-<tag>-<abi>.apk` 分包,
+  /// 没有对应分包(或旧 release 只发整包)时回落 `MTlauncher-<tag>-universal.apk`。
+  Map<String, dynamic> _releaseAsset(Map<String, dynamic> release, String tagName, String? abi) {
+    if (abi != null) {
+      final asset = _tryAsset(release, "MTlauncher-$tagName-$abi.apk");
+      if (asset != null) return asset;
+    }
+
+    return _asset(release, "MTlauncher-$tagName-universal.apk");
+  }
+
+  Map<String, dynamic>? _tryAsset(Map<String, dynamic> release, String name) {
     final assets = (release["assets"] as List? ?? []).cast<Map<String, dynamic>>();
 
-    return assets.firstWhere(
-        (asset) => asset["name"] == name,
-        orElse: () => throw Exception("Release asset not found: $name"));
+    for (final asset in assets) {
+      if (asset["name"] == name) {
+        return asset;
+      }
+    }
+
+    return null;
+  }
+
+  Map<String, dynamic> _asset(Map<String, dynamic> release, String name) {
+    final asset = _tryAsset(release, name);
+
+    if (asset == null) {
+      throw Exception("Release asset not found: $name");
+    }
+
+    return asset;
   }
 
   Future<dynamic> _getJson(String url) async {
@@ -309,4 +341,16 @@ int? versionCodeFromVersionName(String versionName) {
       + int.parse(match.group(3)!) * 1000
       + labelOrder * 100
       + (int.tryParse(match.group(5) ?? "0") ?? 0);
+}
+
+/// 从设备的 ABI 列表(即 Build.SUPPORTED_ABIS,已按设备优先序排列)里选出
+/// CI 实际发布分包的架构;设备不支持任何已发布架构时返回 null(走整包回落)。
+String? preferredAbi(List<String> deviceAbis) {
+  for (final abi in deviceAbis) {
+    if (_releaseAssetAbis.contains(abi)) {
+      return abi;
+    }
+  }
+
+  return null;
 }

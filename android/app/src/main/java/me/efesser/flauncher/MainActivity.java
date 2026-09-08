@@ -90,6 +90,7 @@ public class MainActivity extends FlutterActivity
                 case "checkForGetContentAvailability" -> result.success(checkForGetContentAvailability());
                 case "startAmbientMode" -> result.success(startAmbientMode());
                 case "getActiveNetworkInformation" -> result.success(getActiveNetworkInformation());
+                case "getSupportedAbis" -> result.success(Arrays.asList(Build.SUPPORTED_ABIS));
                 case "getMemoryInfo" -> result.success(getMemoryInfo());
                 case "cleanMemory" -> new Thread(() -> runOnUiThread(() -> result.success(cleanMemory()))).start();
                 default -> throw new IllegalArgumentException();

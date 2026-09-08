@@ -155,8 +155,16 @@ jobs:
           VERSION_CODE: ${{ steps.version.outputs.VERSION_CODE }}
         run: |
           flutter --no-color build apk --release --build-number $VERSION_CODE --build-name=$VERSION
-          # 文件名带版本(与 BiliMT 一致): MTlauncher-vX.Y.Z[-alpha.N].apk
-          mv $OUTPUT_DIR/app-release.apk $OUTPUT_DIR/MTlauncher-${{ github.ref_name }}.apk
+          # Gradle splits 产出 app-<abi>-release.apk 三分包 + universal 整包(兼容 app-universal-release.apk
+          # 与 app-release.apk 两种 AGP 命名);文件名带 tag(与 BiliMT 一致):
+          #   MTlauncher-vX.Y.Z[-alpha.N]-arm64-v8a.apk / -armeabi-v7a.apk / -x86_64.apk / -universal.apk
+          for apk in $OUTPUT_DIR/app-*.apk; do
+            base=$(basename "$apk" .apk)
+            suffix="${base#app-}"; suffix="${suffix%-release}"
+            if [ "$suffix" = "universal" ] || [ "$suffix" = "release" ]; then suffix="universal"; fi
+            mv "$apk" "$OUTPUT_DIR/MTlauncher-${{ github.ref_name }}-${suffix}.apk"
+          done
+          ls -1 "$OUTPUT_DIR"/MTlauncher-*.apk
       - name: Upload APKs as artifact
         uses: actions/upload-artifact@v4
         with:

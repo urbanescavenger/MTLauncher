@@ -69,6 +69,11 @@ class FLauncherChannel {
     return map.cast<String, dynamic>();
   }
 
+  Future<List<String>> getSupportedAbis() async {
+    List<dynamic>? abis = await _methodChannel.invokeListMethod("getSupportedAbis");
+    return abis!.cast<String>();
+  }
+
   Future<MemoryInfo> getMemoryInfo() async {
     Map<dynamic, dynamic> map = await _methodChannel.invokeMethod("getMemoryInfo");
     return MemoryInfo(map["total"] as int, map["avail"] as int);

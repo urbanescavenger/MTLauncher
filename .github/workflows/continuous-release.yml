@@ -155,7 +155,8 @@ jobs:
           VERSION_CODE: ${{ steps.version.outputs.VERSION_CODE }}
         run: |
           flutter --no-color build apk --release --build-number $VERSION_CODE --build-name=$VERSION
-          mv $OUTPUT_DIR/app-release.apk $OUTPUT_DIR/MTlauncher-universal-release.apk
+          # 文件名带版本(与 BiliMT 一致): MTlauncher-vX.Y.Z[-alpha.N].apk
+          mv $OUTPUT_DIR/app-release.apk $OUTPUT_DIR/MTlauncher-${{ github.ref_name }}.apk
       - name: Upload APKs as artifact
         uses: actions/upload-artifact@v4
         with:

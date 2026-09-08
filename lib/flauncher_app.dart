@@ -74,7 +74,7 @@ class FLauncherApp extends StatelessWidget
         GlobalWidgetsLocalizations.delegate
       ],
       supportedLocales: AppLocalizations.supportedLocales,
-      title: 'FLauncher',
+      title: 'MTLauncher',
       theme: ThemeData(
         useMaterial3: true,
         brightness: Brightness.dark,

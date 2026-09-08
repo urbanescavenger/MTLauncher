@@ -150,9 +150,7 @@ jobs:
           VERSION: ${{ steps.version.outputs.VERSION }}
           VERSION_CODE: ${{ steps.version.outputs.VERSION_CODE }}
         run: |
-          sudo apt install rename -y
           flutter --no-color build apk --release --build-number $VERSION_CODE --build-name=$VERSION
-          file-rename 's/app-(.*)-release.apk/MTlauncher-$1-release.apk/' $OUTPUT_DIR/*.apk
           mv $OUTPUT_DIR/app-release.apk $OUTPUT_DIR/MTlauncher-universal-release.apk
       - name: Upload APKs as artifact
         uses: actions/upload-artifact@v4

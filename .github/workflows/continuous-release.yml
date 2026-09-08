@@ -48,13 +48,13 @@ jobs:
           sudo apt install rename -y
           echo -n "$KEYSTORE_FILE_BASE64" | base64 -d > android/app/upload-keystore.jks
           flutter --no-color build apk --release --build-number $BUILD_NUMBER --build-name=$FULL_VERSION_NUMBER
-          file-rename 's/app-(.*)-release.apk/flauncher-$1-release.apk/' $OUTPUT_DIR/*.apk
-          mv $OUTPUT_DIR/app-release.apk $OUTPUT_DIR/flauncher-universal-release.apk
+          file-rename 's/app-(.*)-release.apk/MTlauncher-$1-release.apk/' $OUTPUT_DIR/*.apk
+          mv $OUTPUT_DIR/app-release.apk $OUTPUT_DIR/MTlauncher-universal-release.apk
       - name: Upload APKs as artifact
         uses: actions/upload-artifact@v4
         with:
-          name: flauncher-release
-          path: ${{ env.OUTPUT_DIR }}/flauncher-*.apk
+          name: MTlauncher-release
+          path: ${{ env.OUTPUT_DIR }}/MTlauncher-*.apk
           retention-days: 30
       - name: Create release
         env:
@@ -63,4 +63,4 @@ jobs:
           FULL_VERSION_NUMBER: ${{ steps.set_version_variables.outputs.FULL_VERSION_NUMBER }}
         run: |
           export TAG_NAME=v$FULL_VERSION_NUMBER
-          gh release create $TAG_NAME --latest --title "Release #$MONTH_VERSION_NUMBER $(date '+%B %Y') ($FULL_VERSION_NUMBER)" --notes "" $OUTPUT_DIR/flauncher-*.apk
+          gh release create $TAG_NAME --latest --title "Release #$MONTH_VERSION_NUMBER $(date '+%B %Y') ($FULL_VERSION_NUMBER)" --notes "" $OUTPUT_DIR/MTlauncher-*.apk

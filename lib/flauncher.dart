@@ -120,8 +120,10 @@ class FLauncher extends StatelessWidget {
         return _emptyState(context);
       }
 
-      return AllAppsGrid(
-        applications: appsService.applications.where((application) => !application.hidden).toList()
+      return SingleChildScrollView(
+        child: AllAppsGrid(
+          applications: appsService.applications.where((application) => !application.hidden).toList()
+        )
       );
     }
   );

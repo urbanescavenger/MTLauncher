@@ -30,6 +30,7 @@ Widget categoryContainerEmptyState(BuildContext context) {
               clipBehavior: Clip.antiAlias,
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
               child: InkWell(
+                autofocus: true,
                 onTap: () => showDialog(
                   context: context,
                   builder: (_) => SettingsPanel(initialRoute: LauncherSectionsPanelPage.routeName),

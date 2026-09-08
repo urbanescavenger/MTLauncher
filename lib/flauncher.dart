@@ -25,6 +25,7 @@ import 'package:flauncher/widgets/all_apps_grid.dart';
 import 'package:flauncher/widgets/apps_grid.dart';
 import 'package:flauncher/widgets/category_container_common.dart';
 import 'package:flauncher/widgets/category_row.dart';
+import 'package:flauncher/widgets/focus_guard.dart';
 import 'package:flauncher/widgets/launcher_alternative_view.dart';
 import 'package:flauncher/widgets/focus_aware_app_bar.dart';
 import 'package:flutter/material.dart';
@@ -69,11 +70,14 @@ class FLauncher extends StatelessWidget {
               appBar: FocusAwareAppBar(),
               body: Padding(
                 padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
-                child: state.currentPage == LauncherState.favoritesPage
-                  ? _favoritesPage(context)
-                  : state.currentPage == LauncherState.categoriesPage
-                    ? _categoriesPage(context)
-                    : _allAppsPage(context)
+                child: FocusGuard(
+                  enabled: state.launcherVisible,
+                  child: state.currentPage == LauncherState.favoritesPage
+                    ? _favoritesPage(context)
+                    : state.currentPage == LauncherState.categoriesPage
+                      ? _categoriesPage(context)
+                      : _allAppsPage(context)
+                )
               )
             )
           )

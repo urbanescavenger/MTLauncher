@@ -78,7 +78,7 @@
     "withEllipsisAddApplication": "添加应用…",
     "language": "语言",
     "systemDefault": "跟随系统",
-    "allApplications": "全部应用",
+    "allApplications": "全部",
     "textNoCategories": "还没有分类。请先在 设置 > 桌面分区 中创建一个,再回到这里添加应用。",
     "textNoApplicationsToAdd": "所有应用都已在该分区中。"
 }

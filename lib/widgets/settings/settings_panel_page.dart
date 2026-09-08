@@ -284,6 +284,9 @@ class SettingsPanelPage extends StatelessWidget {
 
     if (newLocale != null) {
       await service.setLocale(newLocale.isEmpty ? null : newLocale);
+      // The favorites category name is stored in the database; rewrite it so
+      // it follows the new language instead of waiting for the next startup.
+      await context.read<AppsService>().refreshFavoritesCategoryName();
     }
   }
 

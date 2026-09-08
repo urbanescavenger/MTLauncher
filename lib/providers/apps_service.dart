@@ -32,6 +32,12 @@ import '../models/app.dart';
 import '../models/category.dart';
 
 const _favoriteCategoryIdKey = "favorite_category_id";
+const _localeKey = "locale";
+
+/// Default favorites names across all supported languages. A stored name in
+/// this set is a leftover from a previous language and can be rewritten to
+/// follow the current one; user-customized names are not in this set.
+const Set<String> _defaultFavoritesNames = {"Favorites", "Favoritos", "最爱"};
 
 class AppsService extends ChangeNotifier
 {
@@ -141,6 +147,7 @@ class AppsService extends ChangeNotifier
   Future<void> _ensureFavoritesCategory() async {
     int? favoriteCategoryId = _sharedPreferences.getInt(_favoriteCategoryIdKey);
     if (favoriteCategoryId != null && _categoriesById.containsKey(favoriteCategoryId)) {
+      _applyFavoritesCategoryName(favoriteCategoryId, shouldNotifyListeners: false);
       return;
     }
 
@@ -151,9 +158,41 @@ class AppsService extends ChangeNotifier
     }
   }
 
+  /// Rewrites the favorites category name to match the current in-app
+  /// language. The name is stored in the database and would otherwise keep
+  /// the language it was created with. Only default names are migrated;
+  /// user-customized names are left untouched.
+  Future<void> refreshFavoritesCategoryName() async {
+    int? favoriteCategoryId = _sharedPreferences.getInt(_favoriteCategoryIdKey);
+    if (favoriteCategoryId != null && _categoriesById.containsKey(favoriteCategoryId)) {
+      await _applyFavoritesCategoryName(favoriteCategoryId, shouldNotifyListeners: true);
+    }
+  }
+
+  Future<void> _applyFavoritesCategoryName(int categoryId, {required bool shouldNotifyListeners}) async {
+    Category category = _categoriesById[categoryId]!;
+    String name = _favoritesCategoryName();
+    if (category.name == name || !_defaultFavoritesNames.contains(category.name)) {
+      return;
+    }
+
+    await _database.updateCategory(categoryId, CategoriesCompanion(name: Value(name)));
+    category.name = name;
+
+    if (shouldNotifyListeners) {
+      notifyListeners();
+    }
+  }
+
+  Locale _appLocale() {
+    String? localeCode = _sharedPreferences.getString(_localeKey);
+    return (localeCode == null || localeCode.isEmpty)
+      ? PlatformDispatcher.instance.locale
+      : Locale(localeCode);
+  }
+
   String _favoritesCategoryName() {
-    Locale locale = PlatformDispatcher.instance.locale;
-    switch (locale.languageCode) {
+    switch (_appLocale().languageCode) {
       case "zh":
         return "最爱";
       case "es":

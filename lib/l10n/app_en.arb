@@ -121,7 +121,7 @@
     "withEllipsisAddApplication": "Add application...",
     "language": "Language",
     "systemDefault": "System default",
-    "allApplications": "All applications",
+    "allApplications": "All",
     "textNoCategories": "No categories yet. Create one in Settings > Sections, then add apps here.",
     "textNoApplicationsToAdd": "All applications are already in this section."
 }

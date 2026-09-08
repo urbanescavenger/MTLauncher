@@ -17,7 +17,6 @@
     "dateAndTimeFormat": "Date and time format",
     "delete": "Delete",
     "dialogOptionBackButtonActionDoNothing": "Do nothing",
-    "dockEmptyHint": "No pinned apps. Long-press an app and select \"Pin to dock\".",
     "dialogOptionBackButtonActionShowScreensaver": "Show screensaver",
     "dialogOptionBackButtonActionShowClock": "Show clock",
     "dialogTextNoFileExplorer": "Please install a file explorer in order to pick a picture.",
@@ -65,7 +64,6 @@
     "open": "Open",
     "orSelectFormatSpecifiers": "Or select format specifiers",
     "picture": "Picture",
-    "pinToDock": "Pin to dock",
     "removeFrom": "Remove from {name}",
     "@removeFrom": {
         "placeholders": {
@@ -101,7 +99,6 @@
     "typeInTheDateFormat": "Type in the date format",
     "typeInTheHourFormat": "Type in the hour format",
     "uninstall": "Uninstall",
-    "unpinFromDock": "Unpin from dock",
     "updateAvailableTo": "New version {version} available. Select to download.",
     "@updateAvailableTo": {
         "placeholders": {
@@ -121,8 +118,10 @@
     "allowUnknownSourcesFirst": "Allow installing unknown apps from this app in system settings, then try again.",
     "wallpaper": "Wallpaper",
     "withEllipsisAddTo": "Add to...",
+    "withEllipsisAddApplication": "Add application...",
     "language": "Language",
     "systemDefault": "System default",
     "allApplications": "All applications",
-    "textNoCategories": "No categories yet. Create one in Settings > Sections, then add apps here."
+    "textNoCategories": "No categories yet. Create one in Settings > Sections, then add apps here.",
+    "textNoApplicationsToAdd": "All applications are already in this section."
 }

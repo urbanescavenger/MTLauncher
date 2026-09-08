@@ -66,8 +66,7 @@ void main() {
     when(appsService.categories).thenReturn([category]);
     await _pumpWidgetWithProviders(tester, appsService, category, app);
 
-    // Buttons: Open, Reorder, Pin to dock, Add to...
-    await tester.sendKeyEvent(LogicalKeyboardKey.arrowDown);
+    // Buttons: Open, Reorder, Add to...
     await tester.sendKeyEvent(LogicalKeyboardKey.arrowDown);
     await tester.sendKeyEvent(LogicalKeyboardKey.arrowDown);
     await tester.sendKeyEvent(LogicalKeyboardKey.enter);
@@ -92,8 +91,7 @@ void main() {
     when(appsService.categories).thenReturn([category]);
     await _pumpWidgetWithProviders(tester, appsService, category, app);
 
-    // Buttons: Open, Reorder, Pin to dock, Add to..., Hide
-    await tester.sendKeyEvent(LogicalKeyboardKey.arrowDown);
+    // Buttons: Open, Reorder, Add to..., Hide
     await tester.sendKeyEvent(LogicalKeyboardKey.arrowDown);
     await tester.sendKeyEvent(LogicalKeyboardKey.arrowDown);
     await tester.sendKeyEvent(LogicalKeyboardKey.arrowDown);
@@ -114,8 +112,7 @@ void main() {
     when(appsService.categories).thenReturn([category]);
     await _pumpWidgetWithProviders(tester, appsService, category, app);
 
-    // Buttons: Open, Reorder, Pin to dock, Add to..., Hide, Remove from...
-    await tester.sendKeyEvent(LogicalKeyboardKey.arrowDown);
+    // Buttons: Open, Reorder, Add to..., Hide, Remove from...
     await tester.sendKeyEvent(LogicalKeyboardKey.arrowDown);
     await tester.sendKeyEvent(LogicalKeyboardKey.arrowDown);
     await tester.sendKeyEvent(LogicalKeyboardKey.arrowDown);
@@ -137,8 +134,7 @@ void main() {
     when(appsService.categories).thenReturn([category]);
     await _pumpWidgetWithProviders(tester, appsService, category, app);
 
-    // Buttons: Open, Reorder, Pin to dock, Add to..., Hide, Remove from..., App info
-    await tester.sendKeyEvent(LogicalKeyboardKey.arrowDown);
+    // Buttons: Open, Reorder, Add to..., Hide, Remove from..., App info
     await tester.sendKeyEvent(LogicalKeyboardKey.arrowDown);
     await tester.sendKeyEvent(LogicalKeyboardKey.arrowDown);
     await tester.sendKeyEvent(LogicalKeyboardKey.arrowDown);
@@ -161,8 +157,8 @@ void main() {
     when(appsService.categories).thenReturn([category]);
     await _pumpWidgetWithProviders(tester, appsService, category, app);
 
-    // Buttons: Open, Reorder, Pin to dock, Add to..., Hide, Remove from..., App info, Uninstall
-    for (int i = 0; i < 7; ++i) {
+    // Buttons: Open, Reorder, Add to..., Hide, Remove from..., App info, Uninstall
+    for (int i = 0; i < 6; ++i) {
       await tester.sendKeyEvent(LogicalKeyboardKey.arrowDown);
     }
     await tester.sendKeyEvent(LogicalKeyboardKey.enter);

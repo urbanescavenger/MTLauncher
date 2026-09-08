@@ -25,7 +25,6 @@ import 'package:flauncher/widgets/all_apps_grid.dart';
 import 'package:flauncher/widgets/apps_grid.dart';
 import 'package:flauncher/widgets/category_container_common.dart';
 import 'package:flauncher/widgets/category_row.dart';
-import 'package:flauncher/widgets/dock_bar.dart';
 import 'package:flauncher/widgets/launcher_alternative_view.dart';
 import 'package:flauncher/widgets/focus_aware_app_bar.dart';
 import 'package:flutter/material.dart';
@@ -92,12 +91,15 @@ class FLauncher extends StatelessWidget {
       Category? favorites = appsService.favoritesCategory;
       Widget categoryContent = favorites == null
         ? categoryContainerEmptyState(context)
-        : AppsGrid(category: favorites, applications: favorites.applications);
+        : CategoryRow(category: favorites, applications: favorites.applications);
 
       return Column(
         children: [
-          Expanded(child: SingleChildScrollView(child: categoryContent)),
-          const DockBar(),
+          const Spacer(),
+          Padding(
+            padding: const EdgeInsets.only(bottom: 16),
+            child: categoryContent
+          ),
         ],
       );
     }

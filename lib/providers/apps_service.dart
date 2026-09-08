@@ -129,8 +129,8 @@ class AppsService extends ChangeNotifier
       );
   }
 
-  /// Ensures the special "Favorites" category (shown on the first page, above
-  /// the dock bar) exists. It is created on first launch and also for installs
+  /// Ensures the special "Favorites" category (shown on the first page)
+  /// exists. It is created on first launch and also for installs
   /// that predate the three-page launcher. The category is kept out of
   /// [_launcherSections]: it is rendered on its own page instead of among the
   /// custom sections, and cannot be deleted from the sections panel.

@@ -1,8 +1,10 @@
+import 'package:flauncher/widgets/add_application_dialog.dart';
 import 'package:flauncher/widgets/settings/launcher_sections_panel_page.dart';
 import 'package:flauncher/widgets/settings/settings_panel.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
+import '../models/category.dart';
 import 'ensure_visible.dart';
 
 Widget categoryContainerEmptyState(BuildContext context) {
@@ -43,6 +45,56 @@ Widget categoryContainerEmptyState(BuildContext context) {
                 ),
               ),
             ),
+          ),
+        ),
+      ),
+    ),
+  );
+}
+
+class AddAppCard extends StatefulWidget {
+  final Category category;
+
+  const AddAppCard({super.key, required this.category});
+
+  @override
+  State<AddAppCard> createState() => _AddAppCardState();
+}
+
+class _AddAppCardState extends State<AddAppCard> {
+  bool _focused = false;
+
+  @override
+  Widget build(BuildContext context) => AspectRatio(
+    aspectRatio: 16 / 9,
+    child: AnimatedScale(
+      duration: const Duration(milliseconds: 200),
+      curve: Curves.easeInOut,
+      scale: _focused ? 1.1 : 1.0,
+      child: Card(
+        clipBehavior: Clip.antiAlias,
+        elevation: _focused ? 16 : 0,
+        shadowColor: Colors.black,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+        child: InkWell(
+          focusColor: Colors.transparent,
+          onFocusChange: (focused) {
+            setState(() => _focused = focused);
+            if (focused) {
+              Scrollable.ensureVisible(
+                context,
+                alignment: 0.5,
+                curve: Curves.easeInOut,
+                duration: const Duration(milliseconds: 100)
+              );
+            }
+          },
+          onTap: () => showDialog(
+            context: context,
+            builder: (_) => AddApplicationDialog(category: widget.category),
+          ),
+          child: const Center(
+            child: Icon(Icons.add, size: 48),
           ),
         ),
       ),

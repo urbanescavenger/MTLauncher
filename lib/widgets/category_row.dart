@@ -50,19 +50,29 @@ class CategoryRow extends StatelessWidget
           padding: const EdgeInsets.all(8),
           scrollDirection: Axis.horizontal,
           childrenDelegate: SliverChildBuilderDelegate(
-            childCount: applications.length,
+            childCount: applications.length + 1,
             findChildIndexCallback: _findChildIndex,
-            (context, index) => Padding(
-                key: Key(applications[index].packageName),
-                padding: const EdgeInsets.symmetric(horizontal: 8),
-                child: AppCard(
-                  category: category,
-                  application: applications[index],
-                  autofocus: index == 0,
-                  onMove: (direction) => _onMove(context, direction, index),
-                  onMoveEnd: () => _onMoveEnd(context)
-                )
-            )
+            (context, index) {
+              if (index == applications.length) {
+                return Padding(
+                  key: Key("add-app-${category.id}"),
+                  padding: const EdgeInsets.symmetric(horizontal: 8),
+                  child: AddAppCard(category: category)
+                );
+              }
+
+              return Padding(
+                  key: Key(applications[index].packageName),
+                  padding: const EdgeInsets.symmetric(horizontal: 8),
+                  child: AppCard(
+                    category: category,
+                    application: applications[index],
+                    autofocus: index == 0,
+                    onMove: (direction) => _onMove(context, direction, index),
+                    onMoveEnd: () => _onMoveEnd(context)
+                  )
+              );
+            }
           )
         )
       );

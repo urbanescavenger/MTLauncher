@@ -52,16 +52,25 @@ class AppsGrid extends StatelessWidget
         gridDelegate: _buildSliverGridDelegate(),
         padding: EdgeInsets.all(16),
         childrenDelegate: SliverChildBuilderDelegate(
-          childCount: applications.length,
+          childCount: applications.length + 1,
           findChildIndexCallback: _findChildIndex,
-          (context, index) => AppCard(
-              key: Key(applications[index].packageName),
-              category: category,
-              application: applications[index],
-              autofocus: index == 0,
-              onMove: (direction) => _onMove(context, direction, index),
-              onMoveEnd: () => _saveOrder(context)
-          )
+          (context, index) {
+            if (index == applications.length) {
+              return AddAppCard(
+                key: Key("add-app-${category.id}"),
+                category: category,
+              );
+            }
+
+            return AppCard(
+                key: Key(applications[index].packageName),
+                category: category,
+                application: applications[index],
+                autofocus: index == 0,
+                onMove: (direction) => _onMove(context, direction, index),
+                onMoveEnd: () => _saveOrder(context)
+            );
+          }
         )
       );
     }

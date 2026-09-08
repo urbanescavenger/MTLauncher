@@ -17,7 +17,6 @@
     "dateAndTimeFormat": "日期和时间格式",
     "delete": "删除",
     "dialogOptionBackButtonActionDoNothing": "无动作",
-    "dockEmptyHint": "还没有固定应用。长按应用并选择“固定到底栏”。",
     "dialogOptionBackButtonActionShowScreensaver": "显示屏保",
     "dialogOptionBackButtonActionShowClock": "显示时钟",
     "dialogTextNoFileExplorer": "请先安装文件管理器才能选择图片。",
@@ -44,7 +43,6 @@
     "open": "打开",
     "orSelectFormatSpecifiers": "或选择格式占位符",
     "picture": "图片",
-    "pinToDock": "固定到底栏",
     "removeFrom": "从“{name}”移除",
     "renameCategory": "重命名分类",
     "reorder": "调整位置",
@@ -68,7 +66,6 @@
     "typeInTheDateFormat": "输入日期格式",
     "typeInTheHourFormat": "输入时间格式",
     "uninstall": "卸载",
-    "unpinFromDock": "从底栏取消固定",
     "updateAvailableTo": "新版本 {version} 可用,点击下载。",
     "updateChecking": "正在检查更新…",
     "updateCheckFailed": "检查更新失败,点击重试。",
@@ -78,8 +75,10 @@
     "allowUnknownSourcesFirst": "请先在系统设置中允许此应用安装未知来源应用,然后重试。",
     "wallpaper": "壁纸",
     "withEllipsisAddTo": "添加到…",
+    "withEllipsisAddApplication": "添加应用…",
     "language": "语言",
     "systemDefault": "跟随系统",
     "allApplications": "全部应用",
-    "textNoCategories": "还没有分类。请先在 设置 > 桌面分区 中创建一个,再回到这里添加应用。"
+    "textNoCategories": "还没有分类。请先在 设置 > 桌面分区 中创建一个,再回到这里添加应用。",
+    "textNoApplicationsToAdd": "所有应用都已在该分区中。"
 }

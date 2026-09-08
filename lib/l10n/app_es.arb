@@ -17,7 +17,6 @@
     "dateAndTimeFormat": "Formato de fecha y hora",
     "delete": "Eliminar",
     "dialogOptionBackButtonActionDoNothing": "Nada",
-    "dockEmptyHint": "No hay aplicaciones fijadas. Mantén pulsada una aplicación y selecciona \"Fijar a la barra\".",
     "dialogOptionBackButtonActionShowScreensaver": "Mostrar salvapantallas",
     "dialogOptionBackButtonActionShowClock": "Mostrar reloj",
     "dialogTextNoFileExplorer": "Por favor, instale un gestor de archivos para seleccionar una imagen.",
@@ -69,7 +68,6 @@
     "open": "Abrir",
     "orSelectFormatSpecifiers": "O seleccione especificadores de formato",
     "picture": "Imagen",
-    "pinToDock": "Fijar a la barra",
     "removeFrom": "Remover de {name}",
     "@removeFrom": {
         "placeholders": {
@@ -105,7 +103,6 @@
     "typeInTheDateFormat": "Escriba el formato de fecha",
     "typeInTheHourFormat": "Escriba el formato de hora",
     "uninstall": "Desinstalar",
-    "unpinFromDock": "Quitar de la barra",
     "updateAvailableTo": "Nueva versión {version} disponible. Selecciona para descargar.",
     "@updateAvailableTo": {
         "placeholders": {
@@ -125,8 +122,10 @@
     "allowUnknownSourcesFirst": "Permite instalar aplicaciones desconocidas desde esta app en los ajustes del sistema y vuelve a intentarlo.",
     "wallpaper": "Fondo de pantalla",
     "withEllipsisAddTo": "Añadir a...",
+    "withEllipsisAddApplication": "Añadir aplicación...",
     "language": "Idioma",
     "systemDefault": "Predeterminado del sistema",
     "allApplications": "Todas las aplicaciones",
-    "textNoCategories": "Aún no hay categorías. Crea una en Ajustes > Secciones y añade aplicaciones aquí."
+    "textNoCategories": "Aún no hay categorías. Crea una en Ajustes > Secciones y añade aplicaciones aquí.",
+    "textNoApplicationsToAdd": "Todas las aplicaciones ya están en esta sección."
 }

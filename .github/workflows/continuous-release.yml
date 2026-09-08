@@ -133,5 +133,12 @@ jobs:
           MONTH_VERSION_NUMBER: ${{ steps.set_version_variables.outputs.MONTH_VERSION_NUMBER }}
           FULL_VERSION_NUMBER: ${{ steps.set_version_variables.outputs.FULL_VERSION_NUMBER }}
         run: |
+          # 同 tag 的 release 已存在时改为覆盖上传,保证重复推送不失败
           export TAG_NAME=v$FULL_VERSION_NUMBER
-          gh release create $TAG_NAME --latest --title "Release #$MONTH_VERSION_NUMBER $(date '+%B %Y') ($FULL_VERSION_NUMBER)" --notes "" $OUTPUT_DIR/MTlauncher-*.apk
+          TITLE="Release #$MONTH_VERSION_NUMBER $(date '+%B %Y') ($FULL_VERSION_NUMBER)"
+          if gh release view $TAG_NAME --repo $GITHUB_REPOSITORY > /dev/null 2>&1; then
+            gh release edit $TAG_NAME --repo $GITHUB_REPOSITORY --latest --title "$TITLE"
+            gh release upload $TAG_NAME --repo $GITHUB_REPOSITORY $OUTPUT_DIR/MTlauncher-*.apk --clobber
+          else
+            gh release create $TAG_NAME --repo $GITHUB_REPOSITORY --latest --title "$TITLE" --notes "" $OUTPUT_DIR/MTlauncher-*.apk
+          fi

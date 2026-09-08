@@ -55,8 +55,9 @@ Widget categoryContainerEmptyState(BuildContext context) {
 
 class AddAppCard extends StatefulWidget {
   final Category category;
+  final bool autofocus;
 
-  const AddAppCard({super.key, required this.category});
+  const AddAppCard({super.key, required this.category, this.autofocus = false});
 
   @override
   State<AddAppCard> createState() => _AddAppCardState();
@@ -78,6 +79,7 @@ class _AddAppCardState extends State<AddAppCard> {
         shadowColor: Colors.black,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
         child: InkWell(
+          autofocus: widget.autofocus,
           focusColor: Colors.transparent,
           onFocusChange: (focused) {
             setState(() => _focused = focused);

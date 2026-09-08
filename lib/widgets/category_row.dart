@@ -39,44 +39,43 @@ class CategoryRow extends StatelessWidget
 
   @override
   Widget build(BuildContext context) {
-    Widget categoryContent;
-    if (applications.isEmpty) {
-      categoryContent = categoryContainerEmptyState(context);
-    }
-    else {
-      categoryContent = SizedBox(
-        height: category.rowHeight.toDouble(),
-        child: ListView.custom(
-          padding: const EdgeInsets.all(8),
-          scrollDirection: Axis.horizontal,
-          childrenDelegate: SliverChildBuilderDelegate(
-            childCount: applications.length + 1,
-            findChildIndexCallback: _findChildIndex,
-            (context, index) {
-              if (index == applications.length) {
-                return Padding(
-                  key: Key("add-app-${category.id}"),
-                  padding: const EdgeInsets.symmetric(horizontal: 8),
-                  child: AddAppCard(category: category)
-                );
-              }
-
+    // An empty category falls out of this naturally: it renders only the
+    // trailing add-app card, which doubles as the empty-state placeholder.
+    Widget categoryContent = SizedBox(
+      height: category.rowHeight.toDouble(),
+      child: ListView.custom(
+        padding: const EdgeInsets.all(8),
+        scrollDirection: Axis.horizontal,
+        childrenDelegate: SliverChildBuilderDelegate(
+          childCount: applications.length + 1,
+          findChildIndexCallback: _findChildIndex,
+          (context, index) {
+            if (index == applications.length) {
               return Padding(
-                  key: Key(applications[index].packageName),
-                  padding: const EdgeInsets.symmetric(horizontal: 8),
-                  child: AppCard(
-                    category: category,
-                    application: applications[index],
-                    autofocus: index == 0,
-                    onMove: (direction) => _onMove(context, direction, index),
-                    onMoveEnd: () => _onMoveEnd(context)
-                  )
+                key: Key("add-app-${category.id}"),
+                padding: const EdgeInsets.symmetric(horizontal: 8),
+                child: AddAppCard(
+                  category: category,
+                  autofocus: applications.isEmpty
+                )
               );
             }
-          )
+
+            return Padding(
+                key: Key(applications[index].packageName),
+                padding: const EdgeInsets.symmetric(horizontal: 8),
+                child: AppCard(
+                  category: category,
+                  application: applications[index],
+                  autofocus: index == 0,
+                  onMove: (direction) => _onMove(context, direction, index),
+                  onMoveEnd: () => _onMoveEnd(context)
+                )
+            );
+          }
         )
-      );
-    }
+      )
+    );
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,

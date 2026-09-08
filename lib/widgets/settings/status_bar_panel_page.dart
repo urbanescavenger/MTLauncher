@@ -55,6 +55,12 @@ class StatusBarPanelPage extends StatelessWidget {
             secondary: Icon(Icons.calendar_today_outlined)
           ),
           RoundedSwitchListTile(
+            value: settingsService.showMemoryInStatusBar,
+            onChanged: (value) => settingsService.setShowMemoryInStatusBar(value),
+            title: Text(localizations.memory),
+            secondary: Icon(Icons.memory_outlined)
+          ),
+          RoundedSwitchListTile(
             value: settingsService.showTimeInStatusBar,
             onChanged: (value) => settingsService.setShowTimeInStatusBar(value),
             title: Text(localizations.time),

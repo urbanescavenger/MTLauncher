@@ -33,11 +33,22 @@
     "layout": "布局",
     "loading": "加载中",
     "manual": "手动排序",
+    "memory": "内存",
+    "memoryAlreadyClean": "内存很干净,无需清理",
+    "memoryFreed": "已释放 {size} 内存",
+    "@memoryFreed": {
+        "placeholders": {
+            "size": {
+                "type": "String"
+            }
+        }
+    },
     "modifySection": "修改分区",
     "mustNotBeEmpty": "不能为空",
     "name": "名称",
     "newSection": "新建分区",
     "noDateFormatSpecified": "未设置日期格式",
+    "oneTapClean": "一键清理",
     "noTimeFormatSpecified": "未设置时间格式",
     "nonTvApplications": "非 TV 应用",
     "open": "打开",

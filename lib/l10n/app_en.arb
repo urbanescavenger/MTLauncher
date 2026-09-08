@@ -54,12 +54,21 @@
     "layout": "Layout",
     "loading": "Loading",
     "manual": "Manual",
+    "memory": "Memory",
+    "memoryAlreadyClean": "Memory is already clean",
+    "memoryFreed": "Freed {size} of memory",
+    "@memoryFreed": {
+        "placeholders": {
+            "size": { "type": "String" }
+        }
+    },
     "modifySection": "Modify section",
     "mustNotBeEmpty": "Must not be empty",
     "name": "Name",
     "newSection": "New section",
     "noDateFormatSpecified": "No date format specified",
     "noTimeFormatSpecified": "No time format specified",
+    "oneTapClean": "One-tap clean",
     "nonTvApplications": "Non-TV applications",
     "open": "Open",
     "orSelectFormatSpecifiers": "Or select format specifiers",

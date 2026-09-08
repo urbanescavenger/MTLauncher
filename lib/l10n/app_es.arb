@@ -58,12 +58,21 @@
     "layout": "Distribución",
     "loading": "Cargando",
     "manual": "Manual",
+    "memory": "Memoria",
+    "memoryAlreadyClean": "La memoria ya está limpia",
+    "memoryFreed": "Se liberaron {size} de memoria",
+    "@memoryFreed": {
+        "placeholders": {
+            "size": { "type": "String" }
+        }
+    },
     "modifySection": "Modificar sección",
     "mustNotBeEmpty": "No debe estar vacío",
     "name": "Nombre",
     "newSection": "Nueva sección",
     "noDateFormatSpecified": "Sin formato de fecha",
     "noTimeFormatSpecified": "Sin formato de hora",
+    "oneTapClean": "Limpieza con un clic",
     "nonTvApplications": "Otras aplicaciones",
     "open": "Abrir",
     "orSelectFormatSpecifiers": "O seleccione especificadores de formato",

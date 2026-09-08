@@ -22,6 +22,7 @@ import 'package:flauncher/database.dart';
 import 'package:flauncher/flauncher_channel.dart';
 import 'package:flauncher/providers/apps_service.dart';
 import 'package:flauncher/providers/launcher_state.dart';
+import 'package:flauncher/providers/memory_service.dart';
 import 'package:flauncher/providers/network_service.dart';
 import 'package:flauncher/providers/settings_service.dart';
 import 'package:flauncher/providers/update_service.dart';
@@ -55,6 +56,7 @@ Future<void> main() async {
         ChangeNotifierProvider(create: (_) => AppsService(fLauncherChannel, fLauncherDatabase, sharedPreferences)),
         ChangeNotifierProvider(create: (_) => LauncherState()),
         ChangeNotifierProvider(create: (_) => NetworkService(fLauncherChannel)),
+        ChangeNotifierProvider(create: (_) => MemoryService(fLauncherChannel)),
         ChangeNotifierProvider(create: (_) => UpdateService(fLauncherChannel)),
         ChangeNotifierProvider(
             create: (context) {

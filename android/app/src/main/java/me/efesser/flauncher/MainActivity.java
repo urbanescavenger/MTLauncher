@@ -18,6 +18,7 @@
 
 package me.efesser.flauncher;
 
+import android.app.ActivityManager;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.*;
@@ -44,9 +45,12 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.CompletionService;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorCompletionService;
@@ -86,6 +90,8 @@ public class MainActivity extends FlutterActivity
                 case "checkForGetContentAvailability" -> result.success(checkForGetContentAvailability());
                 case "startAmbientMode" -> result.success(startAmbientMode());
                 case "getActiveNetworkInformation" -> result.success(getActiveNetworkInformation());
+                case "getMemoryInfo" -> result.success(getMemoryInfo());
+                case "cleanMemory" -> new Thread(() -> runOnUiThread(() -> result.success(cleanMemory()))).start();
                 default -> throw new IllegalArgumentException();
             }
         });
@@ -396,6 +402,85 @@ public class MainActivity extends FlutterActivity
             //noinspection deprecation
             return NetworkUtils.getNetworkInformation(this, connectivityManager.getActiveNetworkInfo());
         }
+    }
+
+    private Map<String, Object> getMemoryInfo()
+    {
+        ActivityManager.MemoryInfo memoryInfo = getMemoryInfoInternal();
+        return memoryMap(memoryInfo.totalMem, memoryInfo.availMem);
+    }
+
+    private Map<String, Object> cleanMemory()
+    {
+        ActivityManager activityManager = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
+        long availableBefore = getMemoryInfoInternal().availMem;
+
+        Set<String> skipPackages = new HashSet<>(Arrays.asList(
+                getPackageName(),
+                "android",
+                "com.android.systemui",
+                "com.android.settings",
+                "com.android.tv.settings"));
+
+        Set<String> packages = new HashSet<>();
+        for (List<ResolveInfo> activitiesInfo : Arrays.asList(queryIntentActivities(false), queryIntentActivities(true))) {
+            for (ResolveInfo activityInfo : activitiesInfo) {
+                packages.add(activityInfo.activityInfo.packageName);
+            }
+        }
+
+        PackageManager packageManager = getPackageManager();
+        for (String packageName : packages) {
+            if (skipPackages.contains(packageName)) {
+                continue;
+            }
+
+            // NOTE: Only kill third-party apps. Killing system apps is pointless: the system
+            // restarts them right away, so no memory is actually freed.
+            try {
+                ApplicationInfo applicationInfo = packageManager.getApplicationInfo(packageName, 0);
+
+                if ((applicationInfo.flags & ApplicationInfo.FLAG_SYSTEM) != 0) {
+                    continue;
+                }
+            } catch (PackageManager.NameNotFoundException ignored) {
+                continue;
+            }
+
+            // NOTE: On Android 14+ the system silently ignores this call for other apps' processes
+            // (platform behavior change, independent of targetSdk). The reported freed memory stays
+            // honest in either case, since it is measured before and after.
+            activityManager.killBackgroundProcesses(packageName);
+        }
+
+        // Give the system a moment to actually reclaim the memory of the killed processes.
+        try {
+            Thread.sleep(500);
+        } catch (InterruptedException ignored) {
+        }
+
+        long availableAfter = getMemoryInfoInternal().availMem;
+
+        Map<String, Object> map = new HashMap<>();
+        map.put("freed", Math.max(0, availableAfter - availableBefore));
+        map.put("avail", availableAfter);
+        return map;
+    }
+
+    private ActivityManager.MemoryInfo getMemoryInfoInternal()
+    {
+        ActivityManager activityManager = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
+        ActivityManager.MemoryInfo memoryInfo = new ActivityManager.MemoryInfo();
+        activityManager.getMemoryInfo(memoryInfo);
+        return memoryInfo;
+    }
+
+    private Map<String, Object> memoryMap(long total, long avail)
+    {
+        Map<String, Object> map = new HashMap<>();
+        map.put("total", total);
+        map.put("avail", avail);
+        return map;
     }
 
     private boolean tryStartActivity(Intent intent)

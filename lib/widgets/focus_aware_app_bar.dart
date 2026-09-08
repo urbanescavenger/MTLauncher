@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 
 import '../providers/settings_service.dart';
 import 'date_time_widget.dart';
+import 'memory_widget.dart';
 import 'network_widget.dart';
 
 class FocusAwareAppBar extends StatefulWidget implements PreferredSizeWidget
@@ -59,6 +60,19 @@ class _FocusAwareAppBarState extends State<FocusAwareAppBar>
             onPressed: () => showDialog(context: context, builder: (_) => const SettingsPanel()),
             // sometime after Flutter 3.7.5, no later than 3.16.8, the focus highlight went away
             focusColor: Theme.of(context).primaryColorLight,
+          ),
+          Selector<SettingsService, bool>(
+            selector: (_, settings) => settings.showMemoryInStatusBar,
+            builder: (context, showMemory, _) {
+              if (!showMemory) {
+                return const SizedBox.shrink();
+              }
+
+              return const Padding(
+                padding: EdgeInsets.only(left: 16),
+                child: MemoryWidget(),
+              );
+            },
           ),
           const Padding(
             padding: EdgeInsets.only(left: 16),

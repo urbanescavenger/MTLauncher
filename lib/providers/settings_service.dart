@@ -32,6 +32,7 @@ const _favoriteCategoryIdKey = "favorite_category_id";
 const _localeKey = "locale";
 const _showCategoryTitles = "show_category_titles";
 const _showDateInStatusBar = "show_date_in_status_bar";
+const _showMemoryInStatusBar = "show_memory_in_status_bar";
 const _showTimeInStatusBar = "show_time_in_status_bar";
 const _timeFormat = "time_format";
 const _weatherEnabledKey = "weather_enabled";
@@ -53,6 +54,8 @@ class SettingsService extends ChangeNotifier {
   bool get showCategoryTitles => _sharedPreferences.getBool(_showCategoryTitles) ?? true;
 
   bool get showDateInStatusBar => _sharedPreferences.getBool(_showDateInStatusBar) ?? true;
+
+  bool get showMemoryInStatusBar => _sharedPreferences.getBool(_showMemoryInStatusBar) ?? true;
 
   bool get showTimeInStatusBar => _sharedPreferences.getBool(_showTimeInStatusBar) ?? true;
 
@@ -146,6 +149,10 @@ class SettingsService extends ChangeNotifier {
 
   Future<void> setShowDateInStatusBar(bool show) async {
     return set(_showDateInStatusBar, show);
+  }
+
+  Future<void> setShowMemoryInStatusBar(bool show) async {
+    return set(_showMemoryInStatusBar, show);
   }
 
   Future<void> setShowTimeInStatusBar(bool show) async {

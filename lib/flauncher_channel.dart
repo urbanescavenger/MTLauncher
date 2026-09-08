@@ -69,6 +69,16 @@ class FLauncherChannel {
     return map.cast<String, dynamic>();
   }
 
+  Future<MemoryInfo> getMemoryInfo() async {
+    Map<dynamic, dynamic> map = await _methodChannel.invokeMethod("getMemoryInfo");
+    return MemoryInfo(map["total"] as int, map["avail"] as int);
+  }
+
+  Future<CleanMemoryResult> cleanMemory() async {
+    Map<dynamic, dynamic> map = await _methodChannel.invokeMethod("cleanMemory");
+    return CleanMemoryResult(map["freed"] as int, map["avail"] as int);
+  }
+
   Future<void> startAmbientMode() async => await _methodChannel.invokeMethod("startAmbientMode");
 
   void addAppsChangedListener(void Function(Map<String, dynamic>) listener) =>
@@ -82,4 +92,20 @@ class FLauncherChannel {
         Map<dynamic, dynamic> eventMap = event;
         listener(eventMap.cast<String, dynamic>());
       });
+}
+
+class MemoryInfo
+{
+  final int totalMem;
+  final int availMem;
+
+  MemoryInfo(this.totalMem, this.availMem);
+}
+
+class CleanMemoryResult
+{
+  final int freed;
+  final int availMem;
+
+  CleanMemoryResult(this.freed, this.availMem);
 }

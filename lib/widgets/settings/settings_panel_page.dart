@@ -127,6 +127,16 @@ class SettingsPanelPage extends StatelessWidget {
                     ),
                     onPressed: () async => await _backButtonActionDialog(context),
                   ),
+                  TextButton(
+                    child: Row(
+                      children: [
+                        const Icon(Icons.language),
+                        Container(width: 8),
+                        Text(localizations.language, style: Theme.of(context).textTheme.bodyMedium),
+                      ],
+                    ),
+                    onPressed: () async => await _languageDialog(context),
+                  ),
                   RoundedSwitchListTile(
                     value: settingsService.appHighlightAnimationEnabled,
                     onChanged: (value) => settingsService.setAppHighlightAnimationEnabled(value),
@@ -240,6 +250,40 @@ class SettingsPanelPage extends StatelessWidget {
     }
     else {
       return localizations.checkForUpdates;
+    }
+  }
+
+  Future<void> _languageDialog(BuildContext context) async {
+    AppLocalizations localizations = AppLocalizations.of(context)!;
+    SettingsService service = context.read<SettingsService>();
+
+    final newLocale = await showDialog<String>(
+        context: context,
+        builder: (dialogContext) => SimpleDialog(
+            title: Text(localizations.language),
+            children: [
+              SimpleDialogOption(
+                child: Text(localizations.systemDefault),
+                onPressed: () => Navigator.pop(dialogContext, ""),
+              ),
+              SimpleDialogOption(
+                child: const Text("English"),
+                onPressed: () => Navigator.pop(dialogContext, "en"),
+              ),
+              SimpleDialogOption(
+                child: const Text("Español"),
+                onPressed: () => Navigator.pop(dialogContext, "es"),
+              ),
+              SimpleDialogOption(
+                child: const Text("中文"),
+                onPressed: () => Navigator.pop(dialogContext, "zh"),
+              ),
+            ]
+        )
+    );
+
+    if (newLocale != null) {
+      await service.setLocale(newLocale.isEmpty ? null : newLocale);
     }
   }
 

@@ -19,6 +19,7 @@
 import 'package:flauncher/actions.dart';
 import 'package:flauncher/providers/apps_service.dart';
 import 'package:flauncher/providers/launcher_state.dart';
+import 'package:flauncher/providers/settings_service.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -56,7 +57,12 @@ class FLauncherApp extends StatelessWidget
     LauncherState launcherState = context.read<LauncherState>();
     launcherState.refresh(appsService);
 
+    SettingsService settingsService = context.watch<SettingsService>();
+    String? localeCode = settingsService.locale;
+    Locale? locale = localeCode == null ? null : Locale(localeCode);
+
     return MaterialApp(
+      locale: locale,
       shortcuts: {
         ...WidgetsApp.defaultShortcuts,
         const SingleActivator(LogicalKeyboardKey.escape): _backIntents,

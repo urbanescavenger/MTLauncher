@@ -120,5 +120,9 @@
     "appUpToDate": "Up to date",
     "allowUnknownSourcesFirst": "Allow installing unknown apps from this app in system settings, then try again.",
     "wallpaper": "Wallpaper",
-    "withEllipsisAddTo": "Add to..."
+    "withEllipsisAddTo": "Add to...",
+    "language": "Language",
+    "systemDefault": "System default",
+    "allApplications": "All applications",
+    "textNoCategories": "No categories yet. Create one in Settings > Sections, then add apps here."
 }

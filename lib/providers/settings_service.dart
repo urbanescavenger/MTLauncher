@@ -28,6 +28,8 @@ const _autoHideAppBar = "auto_hide_app_bar";
 const _gradientUuidKey = "gradient_uuid";
 const _backButtonAction = "back_button_action";
 const _dateFormat = "date_format";
+const _favoriteCategoryIdKey = "favorite_category_id";
+const _localeKey = "locale";
 const _showCategoryTitles = "show_category_titles";
 const _showDateInStatusBar = "show_date_in_status_bar";
 const _showTimeInStatusBar = "show_time_in_status_bar";
@@ -52,6 +54,16 @@ class SettingsService extends ChangeNotifier {
   bool get showTimeInStatusBar => _sharedPreferences.getBool(_showTimeInStatusBar) ?? true;
 
   String? get gradientUuid => _sharedPreferences.getString(_gradientUuidKey);
+
+  int? get favoriteCategoryId {
+    final value = _sharedPreferences.getInt(_favoriteCategoryIdKey);
+    return value == null || value <= 0 ? null : value;
+  }
+
+  String? get locale {
+    final value = _sharedPreferences.getString(_localeKey);
+    return value == null || value.isEmpty ? null : value;
+  }
 
   String get backButtonAction => _sharedPreferences.getString(_backButtonAction) ?? BACK_BUTTON_ACTION_NOTHING;
 
@@ -82,6 +94,24 @@ class SettingsService extends ChangeNotifier {
 
   Future<void> setGradientUuid(String value) async {
     await _sharedPreferences.setString(_gradientUuidKey, value);
+    notifyListeners();
+  }
+
+  Future<void> setFavoriteCategoryId(int? value) async {
+    if (value == null) {
+      await _sharedPreferences.remove(_favoriteCategoryIdKey);
+    } else {
+      await _sharedPreferences.setInt(_favoriteCategoryIdKey, value);
+    }
+    notifyListeners();
+  }
+
+  Future<void> setLocale(String? value) async {
+    if (value == null || value.isEmpty) {
+      await _sharedPreferences.remove(_localeKey);
+    } else {
+      await _sharedPreferences.setString(_localeKey, value);
+    }
     notifyListeners();
   }
 

@@ -91,4 +91,58 @@ void main() async {
       expect(settingsService.dateFormat, expected);
     });
   });
+
+  group("locale", () {
+    test("defaults to null (system locale)", () async {
+      expect(settingsService.locale, null);
+    });
+
+    test("setLocale persists the language code", () async {
+      final sharedPreferences = await SharedPreferences.getInstance();
+      final settingsService = SettingsService(sharedPreferences);
+
+      await settingsService.setLocale("zh");
+
+      expect(settingsService.locale, "zh");
+      expect(sharedPreferences.getString("locale"), "zh");
+    });
+
+    test("setLocale(null) clears the language code", () async {
+      final sharedPreferences = await SharedPreferences.getInstance();
+      final settingsService = SettingsService(sharedPreferences);
+      await settingsService.setLocale("zh");
+
+      await settingsService.setLocale(null);
+
+      expect(settingsService.locale, null);
+      expect(sharedPreferences.getString("locale"), null);
+    });
+  });
+
+  group("favoriteCategoryId", () {
+    test("defaults to null", () async {
+      expect(settingsService.favoriteCategoryId, null);
+    });
+
+    test("setFavoriteCategoryId persists the id", () async {
+      final sharedPreferences = await SharedPreferences.getInstance();
+      final settingsService = SettingsService(sharedPreferences);
+
+      await settingsService.setFavoriteCategoryId(42);
+
+      expect(settingsService.favoriteCategoryId, 42);
+      expect(sharedPreferences.getInt("favorite_category_id"), 42);
+    });
+
+    test("setFavoriteCategoryId(null) clears the id", () async {
+      final sharedPreferences = await SharedPreferences.getInstance();
+      final settingsService = SettingsService(sharedPreferences);
+      await settingsService.setFavoriteCategoryId(42);
+
+      await settingsService.setFavoriteCategoryId(null);
+
+      expect(settingsService.favoriteCategoryId, null);
+      expect(sharedPreferences.getInt("favorite_category_id"), null);
+    });
+  });
 }

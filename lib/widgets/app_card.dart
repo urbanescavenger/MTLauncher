@@ -36,18 +36,18 @@ const _validationKeys = [LogicalKeyboardKey.select, LogicalKeyboardKey.enter, Lo
 class AppCard extends StatefulWidget
 {
   final App application;
-  final Category category;
+  final Category? category;
   final bool autofocus;
-  final void Function(AxisDirection) onMove;
-  final VoidCallback onMoveEnd;
+  final void Function(AxisDirection)? onMove;
+  final VoidCallback? onMoveEnd;
 
   const AppCard({
     super.key,
+    this.category,
     required this.application,
-    required this.category,
     required this.autofocus,
-    required this.onMove,
-    required this.onMoveEnd,
+    this.onMove,
+    this.onMoveEnd,
   });
 
   @override
@@ -275,16 +275,16 @@ class _AppCardState extends State<AppCard> with SingleTickerProviderStateMixin {
 
   List<Widget> _arrows() => [
       _arrow(Alignment.centerLeft, Icons.keyboard_arrow_left, () {
-        widget.onMove(AxisDirection.left);
+        widget.onMove?.call(AxisDirection.left);
       }),
       _arrow(Alignment.topCenter, Icons.keyboard_arrow_up, () {
-        widget.onMove(AxisDirection.up);
+        widget.onMove?.call(AxisDirection.up);
       }),
       _arrow(Alignment.bottomCenter, Icons.keyboard_arrow_down, () {
-        widget.onMove(AxisDirection.down);
+        widget.onMove?.call(AxisDirection.down);
       }),
       _arrow(Alignment.centerRight, Icons.keyboard_arrow_right, () {
-        widget.onMove(AxisDirection.right);
+        widget.onMove?.call(AxisDirection.right);
       })
   ];
 
@@ -313,16 +313,16 @@ class _AppCardState extends State<AppCard> with SingleTickerProviderStateMixin {
       WidgetsBinding.instance.addPostFrameCallback((_) => Scrollable.ensureVisible(context,
           alignment: 0.1, duration: const Duration(milliseconds: 100), curve: Curves.easeInOut));
       if (key == LogicalKeyboardKey.arrowLeft) {
-        widget.onMove(AxisDirection.left);
+        widget.onMove?.call(AxisDirection.left);
       } else if (key == LogicalKeyboardKey.arrowUp) {
-        widget.onMove(AxisDirection.up);
+        widget.onMove?.call(AxisDirection.up);
       } else if (key == LogicalKeyboardKey.arrowRight) {
-        widget.onMove(AxisDirection.right);
+        widget.onMove?.call(AxisDirection.right);
       } else if (key == LogicalKeyboardKey.arrowDown) {
-        widget.onMove(AxisDirection.down);
+        widget.onMove?.call(AxisDirection.down);
       } else if (_validationKeys.contains(key) || key == LogicalKeyboardKey.escape) {
         setState(() => _moving = false);
-        widget.onMoveEnd();
+        widget.onMoveEnd?.call();
       } else {
         return KeyEventResult.ignored;
       }

@@ -10,6 +10,8 @@ import 'package:flauncher/providers/network_service.dart';
 import 'package:flauncher/providers/settings_service.dart';
 import 'package:flauncher/widgets/settings/back_button_actions.dart';
 import 'package:flauncher/providers/wallpaper_service.dart';
+import 'package:flauncher/widgets/all_apps_grid.dart';
+import 'package:flauncher/widgets/apps_grid.dart';
 import 'package:flauncher/widgets/dock_bar.dart';
 import 'package:flauncher/widgets/launcher_alternative_view.dart';
 import 'package:flutter/material.dart';
@@ -35,22 +37,28 @@ void main() {
     SharedPreferences.setMockInitialValues({});
   });
 
-  testWidgets("Page 1 shows clock and dock, not the app sections", (tester) async {
+  testWidgets("Page 1 shows the favorites category and the dock bar", (tester) async {
     final appsService = mkAppService();
     final app = fakeApp(packageName: "me.efesser.flauncher.1", name: "FLauncher 1");
-    when(appsService.getApplication("me.efesser.flauncher.1")).thenReturn(app);
+    final favoritesCategory = fakeCategory(name: "Favorites", order: 0);
+    favoritesCategory.applications.add(app);
+    when(appsService.favoritesCategory).thenReturn(favoritesCategory);
     final dockService = await mkDockService(["me.efesser.flauncher.1"]);
 
     await _pumpLauncher(tester, appsService, dockService);
 
-    expect(find.byType(AlternativeLauncherView), findsOneWidget);
+    expect(find.byType(AppsGrid), findsOneWidget);
     expect(find.byType(DockBar), findsOneWidget);
+    expect(find.byType(AlternativeLauncherView), findsNothing);
   });
 
-  testWidgets("Arrow down from dock page switches to apps page", (tester) async {
+  testWidgets("Arrow down at the page edge switches to the categories page", (tester) async {
     final appsService = mkAppService();
     final app = fakeApp(packageName: "me.efesser.flauncher.1", name: "FLauncher 1");
-    when(appsService.getApplication("me.efesser.flauncher.1")).thenReturn(app);
+    final favoritesCategory = fakeCategory(name: "Favorites", order: 0);
+    favoritesCategory.applications.add(app);
+    when(appsService.favoritesCategory).thenReturn(favoritesCategory);
+    when(appsService.launcherSections).thenReturn([]);
     final dockService = await mkDockService(["me.efesser.flauncher.1"]);
 
     await _pumpLauncher(tester, appsService, dockService);
@@ -60,33 +68,38 @@ void main() {
 
     expect(find.byType(DockBar), findsNothing);
     final context = tester.element(find.byType(FLauncher));
-    expect(context.read<LauncherState>().currentPage, LauncherState.appsPage);
+    expect(context.read<LauncherState>().currentPage, LauncherState.categoriesPage);
   });
 
-  testWidgets("Back navigation from apps page returns to dock page", (tester) async {
+  testWidgets("Back navigation walks the pages backwards", (tester) async {
     final appsService = mkAppService();
-    final app = fakeApp(packageName: "me.efesser.flauncher.1", name: "FLauncher 1");
-    when(appsService.getApplication("me.efesser.flauncher.1")).thenReturn(app);
-    final dockService = await mkDockService(["me.efesser.flauncher.1"]);
+    when(appsService.favoritesCategory).thenReturn(fakeCategory(name: "Favorites", order: 0));
+    when(appsService.launcherSections).thenReturn([]);
+    final dockService = await mkDockService([]);
 
     await _pumpLauncher(tester, appsService, dockService);
 
     final context = tester.element(find.byType(FLauncher));
     final launcherState = context.read<LauncherState>();
-    launcherState.showAppsPage();
+    launcherState.showPage(LauncherState.allAppsPage);
     await tester.pumpAndSettle();
+    expect(find.byType(AllAppsGrid), findsOneWidget);
     expect(find.byType(DockBar), findsNothing);
 
     // Same code path as PopScope.onPopInvoked
     launcherState.handleBackNavigation(context);
     await tester.pumpAndSettle();
+    expect(launcherState.currentPage, LauncherState.categoriesPage);
 
-    expect(launcherState.currentPage, LauncherState.dockPage);
+    launcherState.handleBackNavigation(context);
+    await tester.pumpAndSettle();
+    expect(launcherState.currentPage, LauncherState.favoritesPage);
     expect(find.byType(DockBar), findsOneWidget);
   });
 
-  testWidgets("Back navigation on dock page keeps dock page", (tester) async {
+  testWidgets("Back navigation on the favorites page keeps the launcher visible", (tester) async {
     final appsService = mkAppService();
+    when(appsService.favoritesCategory).thenReturn(fakeCategory(name: "Favorites", order: 0));
     final dockService = await mkDockService([]);
 
     await _pumpLauncher(tester, appsService, dockService);
@@ -96,8 +109,27 @@ void main() {
 
     launcherState.handleBackNavigation(context);
 
-    expect(launcherState.currentPage, LauncherState.dockPage);
+    expect(launcherState.currentPage, LauncherState.favoritesPage);
     expect(launcherState.launcherVisible, isTrue);
+  });
+
+  test("nextPage and previousPage clamp to the three pages", () {
+    final launcherState = LauncherState();
+
+    launcherState.previousPage();
+    expect(launcherState.currentPage, LauncherState.favoritesPage);
+
+    launcherState.nextPage();
+    expect(launcherState.currentPage, LauncherState.categoriesPage);
+
+    launcherState.nextPage();
+    expect(launcherState.currentPage, LauncherState.allAppsPage);
+
+    launcherState.nextPage();
+    expect(launcherState.currentPage, LauncherState.allAppsPage);
+
+    launcherState.previousPage();
+    expect(launcherState.currentPage, LauncherState.categoriesPage);
   });
 }
 
@@ -130,6 +162,7 @@ AppsService mkAppService() {
   final appsService = MockAppsService();
   when(appsService.initialized).thenReturn(true);
   when(appsService.isDefaultLauncher()).thenAnswer((_) async => true);
+  when(appsService.applications).thenReturn([]);
   return appsService;
 }
 

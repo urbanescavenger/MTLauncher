@@ -60,15 +60,15 @@ Category fakeCategory({
   int order = 0,
   CategorySort sort = CategorySort.manual,
   CategoryType type = CategoryType.grid,
-  int rowHeight = 110,
-  int columnsCount = 6,
+  int rowHeight = Category.RowHeight,
+  int columnsCount = Category.ColumnsCount,
 }) =>
     Category(
       id: Random().nextInt(1 << 32),
       name: name,
       sort: sort,
-      _sectionType: type,
-      _rowHeight: rowHeight,
+      type: type,
+      rowHeight: rowHeight,
       columnsCount: columnsCount,
       order: order,
     );

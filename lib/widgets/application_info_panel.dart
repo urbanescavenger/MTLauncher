@@ -19,6 +19,7 @@
 import 'package:flauncher/database.dart';
 import 'package:flauncher/providers/apps_service.dart';
 import 'package:flauncher/providers/dock_service.dart';
+import 'package:flauncher/widgets/add_to_category_dialog.dart';
 import 'package:flauncher/widgets/right_panel_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -126,6 +127,19 @@ class ApplicationInfoPanel extends StatelessWidget
                        ],
                      ),
                      onPressed: () => context.read<DockService>().togglePin(application.packageName),
+                   ),
+                   TextButton(
+                     child: Row(
+                       children: [
+                         const Icon(Icons.add_box_outlined),
+                         Container(width: 8),
+                         Text(localizations.withEllipsisAddTo, style: Theme.of(context).textTheme.bodyMedium),
+                       ],
+                     ),
+                     onPressed: () => showDialog(
+                       context: context,
+                       builder: (_) => AddToCategoryDialog(application),
+                     ),
                    ),
                    TextButton(
                      child: Row(

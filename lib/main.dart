@@ -47,7 +47,7 @@ Future<void> main() async {
         ChangeNotifierProvider(
             create: (_) => SettingsService(sharedPreferences),
             lazy: false),
-        ChangeNotifierProvider(create: (_) => AppsService(fLauncherChannel, fLauncherDatabase)),
+        ChangeNotifierProvider(create: (_) => AppsService(fLauncherChannel, fLauncherDatabase, sharedPreferences)),
         ChangeNotifierProvider(create: (_) => LauncherState()),
         ChangeNotifierProvider(create: (_) => DockService(sharedPreferences)),
         ChangeNotifierProvider(create: (_) => NetworkService(fLauncherChannel)),

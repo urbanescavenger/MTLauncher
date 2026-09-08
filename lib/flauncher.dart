@@ -21,13 +21,14 @@ import 'package:flauncher/custom_traversal_policy.dart';
 import 'package:flauncher/providers/apps_service.dart';
 import 'package:flauncher/providers/launcher_state.dart';
 import 'package:flauncher/providers/wallpaper_service.dart';
+import 'package:flauncher/widgets/all_apps_grid.dart';
 import 'package:flauncher/widgets/apps_grid.dart';
+import 'package:flauncher/widgets/category_container_common.dart';
 import 'package:flauncher/widgets/category_row.dart';
 import 'package:flauncher/widgets/dock_bar.dart';
 import 'package:flauncher/widgets/launcher_alternative_view.dart';
 import 'package:flauncher/widgets/focus_aware_app_bar.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
@@ -38,7 +39,21 @@ class FLauncher extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => FocusTraversalGroup(
-    policy: RowByRowTraversalPolicy(),
+    policy: RowByRowTraversalPolicy(
+      onTraversalBlocked: (direction) {
+        LauncherState state = context.read<LauncherState>();
+        switch (direction) {
+          case TraversalDirection.up:
+            state.previousPage();
+            break;
+          case TraversalDirection.down:
+            state.nextPage();
+            break;
+          default:
+            break;
+        }
+      },
+    ),
     child: Stack(
       children: [
         Consumer<WallpaperService>(
@@ -55,18 +70,11 @@ class FLauncher extends StatelessWidget {
               appBar: FocusAwareAppBar(),
               body: Padding(
                 padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
-                child: state.currentPage == LauncherState.dockPage
-                  ? _dockPage(context, state)
-                  : Consumer<AppsService>(
-                      builder: (context, appsService, _) {
-                        if (appsService.initialized) {
-                          return SingleChildScrollView(child: _sections(appsService.launcherSections));
-                        }
-                        else {
-                          return _emptyState(context);
-                        }
-                      }
-                    )
+                child: state.currentPage == LauncherState.favoritesPage
+                  ? _favoritesPage(context)
+                  : state.currentPage == LauncherState.categoriesPage
+                    ? _categoriesPage(context)
+                    : _allAppsPage(context)
               )
             )
           )
@@ -75,21 +83,47 @@ class FLauncher extends StatelessWidget {
     )
   );
 
-  Widget _dockPage(BuildContext context, LauncherState state) => Focus(
-    skipTraversal: true,
-    onKeyEvent: (node, event) {
-      if (event is KeyDownEvent && event.logicalKey == LogicalKeyboardKey.arrowDown) {
-        state.showAppsPage();
-        return KeyEventResult.handled;
+  Widget _favoritesPage(BuildContext context) => Consumer<AppsService>(
+    builder: (context, appsService, _) {
+      if (!appsService.initialized) {
+        return _emptyState(context);
       }
-      return KeyEventResult.ignored;
-    },
-    child: Column(
-      children: [
-        const Expanded(child: AlternativeLauncherView()),
-        const DockBar(),
-      ],
-    ),
+
+      Category? favorites = appsService.favoritesCategory;
+      Widget categoryContent = favorites == null
+        ? categoryContainerEmptyState(context)
+        : AppsGrid(category: favorites, applications: favorites.applications);
+
+      return Column(
+        children: [
+          Expanded(child: SingleChildScrollView(child: categoryContent)),
+          const DockBar(),
+        ],
+      );
+    }
+  );
+
+  Widget _categoriesPage(BuildContext context) => Consumer<AppsService>(
+    builder: (context, appsService, _) {
+      if (appsService.initialized) {
+        return SingleChildScrollView(child: _sections(appsService.launcherSections));
+      }
+      else {
+        return _emptyState(context);
+      }
+    }
+  );
+
+  Widget _allAppsPage(BuildContext context) => Consumer<AppsService>(
+    builder: (context, appsService, _) {
+      if (!appsService.initialized) {
+        return _emptyState(context);
+      }
+
+      return AllAppsGrid(
+        applications: appsService.applications.where((application) => !application.hidden).toList()
+      );
+    }
   );
 
   Widget _sections(List<LauncherSection> sections) => Column(

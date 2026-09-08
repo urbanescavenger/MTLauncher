@@ -7,7 +7,15 @@ import 'package:flutter/material.dart';
 /// Going up or down will always go to the next or previous row. All other
 /// traversal policy try to be smart, and in some cases can skip rows when
 /// going up or down.
+///
+/// When no candidate can be found in the requested direction (the focus is
+/// blocked at an edge), [onTraversalBlocked] is invoked so the launcher can
+/// flip to the previous/next page.
 class RowByRowTraversalPolicy extends FocusTraversalPolicy with DirectionalFocusTraversalPolicyMixin {
+  final void Function(TraversalDirection direction)? onTraversalBlocked;
+
+  RowByRowTraversalPolicy({this.onTraversalBlocked});
+
   @override
   Iterable<FocusNode> sortDescendants(Iterable<FocusNode> descendants, FocusNode currentNode) => descendants;
 
@@ -21,6 +29,7 @@ class RowByRowTraversalPolicy extends FocusTraversalPolicy with DirectionalFocus
     NodeSearcher searcher = NodeSearcher(direction);
     List<CandidateNode> candidates = searcher.findCandidates(nodes, currentNode);
     if (candidates.isEmpty) {
+      onTraversalBlocked?.call(direction);
       return super.inDirection(currentNode, direction);
     }
     FocusNode nextNode = searcher.findBestFocusNode(candidates, currentNode);

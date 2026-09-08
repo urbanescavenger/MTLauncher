@@ -16,12 +16,14 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import 'package:flauncher/database.dart';
+import 'package:flauncher/models/app.dart';
+import 'package:flauncher/models/category.dart';
 import 'package:flauncher/providers/apps_service.dart';
 import 'package:flauncher/widgets/application_info_panel.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:mockito/mockito.dart';
 import 'package:provider/provider.dart';
 
@@ -47,10 +49,35 @@ void main() {
     when(appsService.applications).thenReturn([app]);
     await _pumpWidgetWithProviders(tester, appsService, null, app);
 
-    await tester.sendKeyEvent(LogicalKeyboardKey.arrowDown);
     await tester.sendKeyEvent(LogicalKeyboardKey.enter);
     await tester.pumpAndSettle();
     verify(appsService.launchApp(app));
+  });
+
+  testWidgets("'Add to...' opens the add-to-category dialog", (tester) async {
+    final appsService = MockAppsService();
+    final category = fakeCategory(name: "Category 1", order: 0);
+    final app = fakeApp(
+      packageName: "me.efesser.flauncher",
+      name: "FLauncher",
+      version: "1.0.0",
+    );
+    when(appsService.applications).thenReturn([]);
+    when(appsService.categories).thenReturn([category]);
+    await _pumpWidgetWithProviders(tester, appsService, category, app);
+
+    // Buttons: Open, Reorder, Pin to dock, Add to...
+    await tester.sendKeyEvent(LogicalKeyboardKey.arrowDown);
+    await tester.sendKeyEvent(LogicalKeyboardKey.arrowDown);
+    await tester.sendKeyEvent(LogicalKeyboardKey.arrowDown);
+    await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+    await tester.pumpAndSettle();
+    expect(find.text("Add to..."), findsOneWidget);
+    expect(find.text("Category 1"), findsOneWidget);
+
+    await tester.tap(find.text("Category 1"));
+    await tester.pumpAndSettle();
+    verify(appsService.addToCategory(app, category));
   });
 
   testWidgets("'Hide' calls AppsService", (tester) async {
@@ -61,16 +88,17 @@ void main() {
       name: "FLauncher",
       version: "1.0.0",
     );
-    when(appsService.categoriesWithApps).thenReturn([
-      CategoryWithApps(category, [app]),
-    ]);
     when(appsService.applications).thenReturn([]);
+    when(appsService.categories).thenReturn([category]);
     await _pumpWidgetWithProviders(tester, appsService, category, app);
 
+    // Buttons: Open, Reorder, Pin to dock, Add to..., Hide
+    await tester.sendKeyEvent(LogicalKeyboardKey.arrowDown);
     await tester.sendKeyEvent(LogicalKeyboardKey.arrowDown);
     await tester.sendKeyEvent(LogicalKeyboardKey.arrowDown);
     await tester.sendKeyEvent(LogicalKeyboardKey.arrowDown);
     await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+    await tester.pumpAndSettle();
     verify(appsService.hideApplication(app));
   });
 
@@ -82,17 +110,18 @@ void main() {
       name: "FLauncher",
       version: "1.0.0",
     );
-    when(appsService.categoriesWithApps).thenReturn([
-      CategoryWithApps(category, [app]),
-    ]);
     when(appsService.applications).thenReturn([]);
+    when(appsService.categories).thenReturn([category]);
     await _pumpWidgetWithProviders(tester, appsService, category, app);
 
+    // Buttons: Open, Reorder, Pin to dock, Add to..., Hide, Remove from...
+    await tester.sendKeyEvent(LogicalKeyboardKey.arrowDown);
     await tester.sendKeyEvent(LogicalKeyboardKey.arrowDown);
     await tester.sendKeyEvent(LogicalKeyboardKey.arrowDown);
     await tester.sendKeyEvent(LogicalKeyboardKey.arrowDown);
     await tester.sendKeyEvent(LogicalKeyboardKey.arrowDown);
     await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+    await tester.pumpAndSettle();
     verify(appsService.removeFromCategory(app, category));
   });
 
@@ -104,18 +133,19 @@ void main() {
       name: "FLauncher",
       version: "1.0.0",
     );
-    when(appsService.categoriesWithApps).thenReturn([
-      CategoryWithApps(category, [app]),
-    ]);
     when(appsService.applications).thenReturn([]);
+    when(appsService.categories).thenReturn([category]);
     await _pumpWidgetWithProviders(tester, appsService, category, app);
 
+    // Buttons: Open, Reorder, Pin to dock, Add to..., Hide, Remove from..., App info
+    await tester.sendKeyEvent(LogicalKeyboardKey.arrowDown);
     await tester.sendKeyEvent(LogicalKeyboardKey.arrowDown);
     await tester.sendKeyEvent(LogicalKeyboardKey.arrowDown);
     await tester.sendKeyEvent(LogicalKeyboardKey.arrowDown);
     await tester.sendKeyEvent(LogicalKeyboardKey.arrowDown);
     await tester.sendKeyEvent(LogicalKeyboardKey.arrowDown);
     await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+    await tester.pumpAndSettle();
     verify(appsService.openAppInfo(app));
   });
 
@@ -127,19 +157,16 @@ void main() {
       name: "FLauncher",
       version: "1.0.0",
     );
-    when(appsService.categoriesWithApps).thenReturn([
-      CategoryWithApps(category, [app]),
-    ]);
     when(appsService.applications).thenReturn([]);
+    when(appsService.categories).thenReturn([category]);
     await _pumpWidgetWithProviders(tester, appsService, category, app);
 
-    await tester.sendKeyEvent(LogicalKeyboardKey.arrowDown);
-    await tester.sendKeyEvent(LogicalKeyboardKey.arrowDown);
-    await tester.sendKeyEvent(LogicalKeyboardKey.arrowDown);
-    await tester.sendKeyEvent(LogicalKeyboardKey.arrowDown);
-    await tester.sendKeyEvent(LogicalKeyboardKey.arrowDown);
-    await tester.sendKeyEvent(LogicalKeyboardKey.arrowDown);
+    // Buttons: Open, Reorder, Pin to dock, Add to..., Hide, Remove from..., App info, Uninstall
+    for (int i = 0; i < 7; ++i) {
+      await tester.sendKeyEvent(LogicalKeyboardKey.arrowDown);
+    }
     await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+    await tester.pumpAndSettle();
     verify(appsService.uninstallApp(app));
   });
 }
@@ -156,6 +183,8 @@ Future<void> _pumpWidgetWithProviders(
         ChangeNotifierProvider<AppsService>.value(value: appsService),
       ],
       builder: (_, __) => MaterialApp(
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
         home: ApplicationInfoPanel(
           category: category,
           application: application,

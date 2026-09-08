@@ -18,21 +18,25 @@
 
 import 'dart:async';
 import 'dart:collection';
+import 'dart:ui' show Locale, PlatformDispatcher;
 import 'package:collection/collection.dart' as collection;
 
 import 'package:drift/drift.dart';
-import 'package:flauncher/database.dart';
 import 'package:flauncher/flauncher_channel.dart';
 import 'package:flutter/foundation.dart' hide Category;
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:tuple/tuple.dart';
 
 import '../models/app.dart';
 import '../models/category.dart';
 
+const _favoriteCategoryIdKey = "favorite_category_id";
+
 class AppsService extends ChangeNotifier
 {
   final FLauncherChannel _fLauncherChannel;
   final FLauncherDatabase _database;
+  final SharedPreferences _sharedPreferences;
 
   bool _initialized = false;
 
@@ -51,15 +55,21 @@ class AppsService extends ChangeNotifier
       .map((category) => category.unmodifiable())
       .toList(growable: false);
 
-  AppsService(this._fLauncherChannel, this._database) {
+  Category? get favoritesCategory {
+    int? favoriteCategoryId = _sharedPreferences.getInt(_favoriteCategoryIdKey);
+    if (favoriteCategoryId == null || !_categoriesById.containsKey(favoriteCategoryId)) {
+      return null;
+    }
+    return _categoriesById[favoriteCategoryId]!.unmodifiable();
+  }
+
+  AppsService(this._fLauncherChannel, this._database, this._sharedPreferences) {
     _init();
   }
 
   Future<void> _init() async {
     await _refreshState(shouldNotifyListeners: false);
-    if (_database.wasCreated) {
-      await _initDefaultCategories();
-    }
+    await _ensureFavoritesCategory();
 
     _fLauncherChannel.addAppsChangedListener((event) async {
       switch (event["action"]) {
@@ -118,31 +128,34 @@ class AppsService extends ChangeNotifier
       );
   }
 
-  Future<void> _initDefaultCategories() {
-    final tvApplications = _applications.values.where((application) => application.sideloaded == false);
-    final nonTvApplications = _applications.values.where((application) => application.sideloaded == true);
+  /// Ensures the special "Favorites" category (shown on the first page, above
+  /// the dock bar) exists. It is created on first launch and also for installs
+  /// that predate the three-page launcher. The category is kept out of
+  /// [_launcherSections]: it is rendered on its own page instead of among the
+  /// custom sections, and cannot be deleted from the sections panel.
+  Future<void> _ensureFavoritesCategory() async {
+    int? favoriteCategoryId = _sharedPreferences.getInt(_favoriteCategoryIdKey);
+    if (favoriteCategoryId != null && _categoriesById.containsKey(favoriteCategoryId)) {
+      return;
+    }
 
-    return _database.transaction(() async {
-      if (tvApplications.isNotEmpty) {
-        int categoryId = await addCategory("TV Applications",
-            type: CategoryType.grid, shouldNotifyListeners: false
-        );
+    int categoryId = await addCategory(_favoritesCategoryName(), shouldNotifyListeners: false);
+    if (categoryId > 0) {
+      _launcherSections.removeWhere((section) => section.id == categoryId);
+      await _sharedPreferences.setInt(_favoriteCategoryIdKey, categoryId);
+    }
+  }
 
-        Category tvAppsCategory = _categoriesById[categoryId]!;
-        for (final app in tvApplications) {
-          await addToCategory(app, tvAppsCategory, shouldNotifyListeners: false);
-        }
-      }
-      if (nonTvApplications.isNotEmpty) {
-        int categoryId = await addCategory("Non-TV Applications",
-          shouldNotifyListeners: false,
-        );
-        Category nonTvAppsCategory = _categoriesById[categoryId]!;
-        for (final app in nonTvApplications) {
-          await addToCategory(app, nonTvAppsCategory, shouldNotifyListeners: false);
-        }
-      }
-    });
+  String _favoritesCategoryName() {
+    Locale locale = PlatformDispatcher.instance.locale;
+    switch (locale.languageCode) {
+      case "zh":
+        return "最爱";
+      case "es":
+        return "Favoritos";
+      default:
+        return "Favorites";
+    }
   }
 
   Future<void> _refreshState({bool shouldNotifyListeners = true}) async {
@@ -191,6 +204,11 @@ class AppsService extends ChangeNotifier
     _launcherSections.addAll(categories);
     _launcherSections.addAll(spacers);
     _launcherSections.sort((ls0, ls1) => ls0.order.compareTo(ls1.order));
+
+    // The favorites category is rendered on its own page, not among the
+    // custom sections.
+    int? favoriteCategoryId = _sharedPreferences.getInt(_favoriteCategoryIdKey);
+    _launcherSections.removeWhere((section) => section.id == favoriteCategoryId);
 
     for (App application in _applications.values) {
       Map? applicationFromSystem = appsFromSystemByPackageName[application.packageName]?.item1;

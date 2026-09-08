@@ -124,5 +124,9 @@
     "appUpToDate": "Ya está actualizado",
     "allowUnknownSourcesFirst": "Permite instalar aplicaciones desconocidas desde esta app en los ajustes del sistema y vuelve a intentarlo.",
     "wallpaper": "Fondo de pantalla",
-    "withEllipsisAddTo": "Añadir a..."
+    "withEllipsisAddTo": "Añadir a...",
+    "language": "Idioma",
+    "systemDefault": "Predeterminado del sistema",
+    "allApplications": "Todas las aplicaciones",
+    "textNoCategories": "Aún no hay categorías. Crea una en Ajustes > Secciones y añade aplicaciones aquí."
 }

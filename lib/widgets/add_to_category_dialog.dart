@@ -40,20 +40,30 @@ class AddToCategoryDialog extends StatelessWidget {
           return SimpleDialog(
           title: Text(localizations.withEllipsisAddTo),
           contentPadding: EdgeInsets.all(16),
-          children: categories
-              .map(
-                (category) => Card(
-                  clipBehavior: Clip.antiAlias,
-                  child: ListTile(
-                    onTap: () async {
-                      await context.read<AppsService>().addToCategory(selectedApplication, category);
-                      Navigator.of(context).pop();
-                    },
-                    title: Text(category.name),
+          children: categories.isEmpty
+              ? [
+                  Padding(
+                    padding: EdgeInsets.all(8),
+                    child: Text(
+                      localizations.textNoCategories,
+                      style: Theme.of(context).textTheme.bodyMedium,
+                    ),
                   ),
-                ),
-              )
-              .toList(),
+                ]
+              : categories
+                  .map(
+                    (category) => Card(
+                      clipBehavior: Clip.antiAlias,
+                      child: ListTile(
+                        onTap: () async {
+                          await context.read<AppsService>().addToCategory(selectedApplication, category);
+                          Navigator.of(context).pop();
+                        },
+                        title: Text(category.name),
+                      ),
+                    ),
+                  )
+                  .toList(),
         );
         },
       );

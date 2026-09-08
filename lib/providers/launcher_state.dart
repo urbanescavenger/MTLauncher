@@ -16,6 +16,8 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+import 'dart:math';
+
 import 'package:flauncher/providers/settings_service.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
@@ -31,33 +33,31 @@ class LauncherState extends ChangeNotifier
   bool _launcherVisible;
   int _currentPage;
 
-  static const int dockPage = 0;
-  static const int appsPage = 1;
+  static const int favoritesPage = 0;
+  static const int categoriesPage = 1;
+  static const int allAppsPage = 2;
 
   bool  get isDefaultLauncher => _isDefaultLauncher;
   bool  get launcherVisible => _launcherVisible;
   int   get currentPage => _currentPage;
 
-  LauncherState() : _isDefaultLauncher = false, _launcherVisible = true, _currentPage = dockPage;
+  LauncherState() : _isDefaultLauncher = false, _launcherVisible = true, _currentPage = favoritesPage;
 
   void toggleLauncherVisibility() {
     _launcherVisible = !_launcherVisible;
     notifyListeners();
   }
 
-  void showAppsPage() {
-    if (_currentPage != appsPage) {
-      _currentPage = appsPage;
+  void showPage(int page) {
+    if (_currentPage != page) {
+      _currentPage = page;
       notifyListeners();
     }
   }
 
-  void showDockPage() {
-    if (_currentPage != dockPage) {
-      _currentPage = dockPage;
-      notifyListeners();
-    }
-  }
+  void nextPage() => showPage(min(_currentPage + 1, allAppsPage));
+
+  void previousPage() => showPage(max(_currentPage - 1, favoritesPage));
 
   Future<void> refresh(AppsService appsService) async {
     _isDefaultLauncher = await appsService.isDefaultLauncher();
@@ -65,8 +65,8 @@ class LauncherState extends ChangeNotifier
   }
 
   void handleBackNavigation(BuildContext context) {
-    if (_currentPage == appsPage) {
-      showDockPage();
+    if (_currentPage > favoritesPage) {
+      previousPage();
       return;
     }
 

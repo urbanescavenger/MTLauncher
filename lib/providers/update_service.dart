@@ -182,7 +182,7 @@ class UpdateService extends ChangeNotifier {
     return installed;
   }
 
-  Future<_RemoteRelease?> _checkLatestRelease(String installedVersionName) async {
+  Future<_RemoteRelease> _checkLatestRelease(String installedVersionName) async {
     final body = await _getJson("https://api.github.com/repos/$_repoOwner/$_repoName/releases?per_page=30");
     final releases = body as List? ?? [];
     final includePrereleases = installedVersionName.contains("-");

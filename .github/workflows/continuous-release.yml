@@ -37,7 +37,7 @@ jobs:
       - name: Analyze
         run: |
           flutter pub get
-          dart analyze --no-fatal-infos lib
+          dart analyze lib
       - name: Restore release keystore
         env:
           FLAUNCHER_KEYSTORE_PASSWORD: ${{ secrets.FLAUNCHER_KEYSTORE_PASSWORD }}

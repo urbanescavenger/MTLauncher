@@ -55,9 +55,24 @@ class LauncherState extends ChangeNotifier
     }
   }
 
-  void nextPage() => showPage(min(_currentPage + 1, allAppsPage));
+  /// Moves forward one page. When [skipCategories] is set and there is
+  /// nothing to show on the categories page, jumps straight to the all-apps
+  /// page instead.
+  void nextPage({bool skipCategories = false}) {
+    int page = (_currentPage == favoritesPage && skipCategories)
+      ? allAppsPage
+      : min(_currentPage + 1, allAppsPage);
+    showPage(page);
+  }
 
-  void previousPage() => showPage(max(_currentPage - 1, favoritesPage));
+  /// Moves back one page. When [skipCategories] is set and there is nothing
+  /// to show on the categories page, jumps straight to the favorites page.
+  void previousPage({bool skipCategories = false}) {
+    int page = (_currentPage == allAppsPage && skipCategories)
+      ? favoritesPage
+      : max(_currentPage - 1, favoritesPage);
+    showPage(page);
+  }
 
   Future<void> refresh(AppsService appsService) async {
     _isDefaultLauncher = await appsService.isDefaultLauncher();
@@ -66,7 +81,8 @@ class LauncherState extends ChangeNotifier
 
   void handleBackNavigation(BuildContext context) {
     if (_currentPage > favoritesPage) {
-      previousPage();
+      AppsService appsService = context.read<AppsService>();
+      previousPage(skipCategories: !appsService.hasCustomSections);
       return;
     }
 

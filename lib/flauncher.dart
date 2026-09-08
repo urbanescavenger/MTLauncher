@@ -42,12 +42,14 @@ class FLauncher extends StatelessWidget {
     policy: RowByRowTraversalPolicy(
       onTraversalBlocked: (direction) {
         LauncherState state = context.read<LauncherState>();
+        // No custom sections means the categories page is blank: skip it.
+        bool skipCategories = !context.read<AppsService>().hasCustomSections;
         switch (direction) {
           case TraversalDirection.up:
-            state.previousPage();
+            state.previousPage(skipCategories: skipCategories);
             break;
           case TraversalDirection.down:
-            state.nextPage();
+            state.nextPage(skipCategories: skipCategories);
             break;
           default:
             break;

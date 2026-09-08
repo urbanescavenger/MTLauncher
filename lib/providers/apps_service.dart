@@ -52,6 +52,10 @@ class AppsService extends ChangeNotifier
   App? getApplication(String packageName) => _applications[packageName];
 
   List<LauncherSection> get launcherSections => List.unmodifiable(_launcherSections);
+
+  /// Whether the custom sections page has anything to show. Spacers alone
+  /// do not count: the second launcher page is skipped when this is false.
+  bool get hasCustomSections => _launcherSections.any((section) => section is Category);
   List<Category> get categories => _categoriesById.values
       .map((category) => category.unmodifiable())
       .toList(growable: false);

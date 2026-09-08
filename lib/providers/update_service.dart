@@ -27,6 +27,7 @@ import 'package:path_provider/path_provider.dart';
 
 const _repoOwner = "urbanescavenger";
 const _repoName = "MTLauncher";
+const _debugAssetName = "MTlauncher-debug.apk";
 const _releaseAssetName = "MTlauncher-universal-release.apk";
 const _downloadFileName = "MTlauncher-update.apk";
 

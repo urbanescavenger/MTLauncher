@@ -82,7 +82,11 @@ class _FocusGuardState extends State<FocusGuard> with WidgetsBindingObserver {
 
     final FocusManager manager = FocusManager.instance;
     final FocusNode? primary = manager.primaryFocus;
-    if (primary != null && primary != manager.rootScope) return;
+    // A primary focus whose parent is null is an orphan: the widget that owned
+    // it was unmounted (e.g. an app removed while its info panel was open, and
+    // the route pop then re-focused the stale node). Keys reach its leftover
+    // handlers but traversal is dead, so treat it as lost like the root scope.
+    if (primary != null && primary != manager.rootScope && primary.parent != null) return;
 
     // Focus is lost: hand it to the first focusable node in the body, in tree
     // order (the first app card of the current page).

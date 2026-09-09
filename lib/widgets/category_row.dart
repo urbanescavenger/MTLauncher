@@ -103,8 +103,12 @@ class CategoryRow extends StatelessWidget
     );
   }
 
-  int _findChildIndex(Key key) =>
-      applications.indexWhere((app) => app.packageName == (key as ValueKey<String>).value);
+  // The contract requires null (not a negative index) when the key is gone,
+  // e.g. after an app was removed from the row.
+  int? _findChildIndex(Key key) {
+    final int index = applications.indexWhere((app) => app.packageName == (key as ValueKey<String>).value);
+    return index < 0 ? null : index;
+  }
 
   void _onMove(BuildContext context, AxisDirection direction, int index) {
     int newIndex = 0;

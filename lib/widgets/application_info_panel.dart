@@ -84,7 +84,14 @@ class ApplicationInfoPanel extends StatelessWidget
                        children: [
                          const Icon(Icons.open_in_new),
                          Container(width: 8),
-                         Text(localizations.open, style: Theme.of(context).textTheme.bodyMedium),
+                         Flexible(
+                           child: Text(
+                             localizations.open,
+                             style: Theme.of(context).textTheme.bodyMedium,
+                             maxLines: 2,
+                             overflow: TextOverflow.ellipsis,
+                           ),
+                         ),
                        ],
                      ),
                      onPressed: () async {
@@ -98,7 +105,14 @@ class ApplicationInfoPanel extends StatelessWidget
                          children: [
                            const Icon(Icons.open_with),
                            Container(width: 8),
-                           Text(localizations.reorder, style: Theme.of(context).textTheme.bodyMedium),
+                           Flexible(
+                             child: Text(
+                               localizations.reorder,
+                               style: Theme.of(context).textTheme.bodyMedium,
+                               maxLines: 2,
+                               overflow: TextOverflow.ellipsis,
+                             ),
+                           ),
                          ],
                        ),
                        onPressed: () => Navigator.of(context).pop(ApplicationInfoPanelResult.reorderApp),
@@ -108,7 +122,14 @@ class ApplicationInfoPanel extends StatelessWidget
                        children: [
                          const Icon(Icons.add_box_outlined),
                          Container(width: 8),
-                         Text(localizations.withEllipsisAddTo, style: Theme.of(context).textTheme.bodyMedium),
+                         Flexible(
+                           child: Text(
+                             localizations.withEllipsisAddTo,
+                             style: Theme.of(context).textTheme.bodyMedium,
+                             maxLines: 2,
+                             overflow: TextOverflow.ellipsis,
+                           ),
+                         ),
                        ],
                      ),
                      onPressed: () => showDialog(
@@ -121,16 +142,28 @@ class ApplicationInfoPanel extends StatelessWidget
                        children: [
                          Icon(application.hidden ? Icons.visibility : Icons.visibility_off_outlined),
                          Container(width: 8),
-                         Text(application.hidden ? localizations.show : localizations.hide, style: Theme.of(context).textTheme.bodyMedium),
+                         Flexible(
+                           child: Text(
+                             application.hidden ? localizations.show : localizations.hide,
+                             style: Theme.of(context).textTheme.bodyMedium,
+                             maxLines: 2,
+                             overflow: TextOverflow.ellipsis,
+                           ),
+                         ),
                        ],
                      ),
                      onPressed: () async {
-                       if (application.hidden) {
-                         await context.read<AppsService>().showApplication(application);
-                       } else {
-                         await context.read<AppsService>().hideApplication(application);
-                       }
+                       // Close the panel before mutating: the removal
+                       // rebuilds the row and can unmount the focused card,
+                       // and popping afterwards would restore focus onto the
+                       // now-stale node, leaving the D-pad dead.
+                       final AppsService appsService = context.read<AppsService>();
                        Navigator.of(context).pop(ApplicationInfoPanelResult.none);
+                       if (application.hidden) {
+                         await appsService.showApplication(application);
+                       } else {
+                         await appsService.hideApplication(application);
+                       }
                      },
                    ),
                    if (category != null)
@@ -150,8 +183,10 @@ class ApplicationInfoPanel extends StatelessWidget
                          ],
                        ),
                        onPressed: () async {
-                         await context.read<AppsService>().removeFromCategory(application, category!);
+                         // See hide/show above: close first, then mutate.
+                         final AppsService appsService = context.read<AppsService>();
                          Navigator.of(context).pop(ApplicationInfoPanelResult.none);
+                         await appsService.removeFromCategory(application, category!);
                        },
                      ),
                    const Divider(),
@@ -160,7 +195,14 @@ class ApplicationInfoPanel extends StatelessWidget
                        children: [
                          const Icon(Icons.info_outlined),
                          Container(width: 8),
-                         Text(localizations.appInfo, style: Theme.of(context).textTheme.bodyMedium),
+                         Flexible(
+                           child: Text(
+                             localizations.appInfo,
+                             style: Theme.of(context).textTheme.bodyMedium,
+                             maxLines: 2,
+                             overflow: TextOverflow.ellipsis,
+                           ),
+                         ),
                        ],
                      ),
                      onPressed: () => context.read<AppsService>().openAppInfo(application),
@@ -170,12 +212,20 @@ class ApplicationInfoPanel extends StatelessWidget
                        children: [
                          const Icon(Icons.delete_outlined),
                          Container(width: 8),
-                         Text(localizations.uninstall, style: Theme.of(context).textTheme.bodyMedium),
+                         Flexible(
+                           child: Text(
+                             localizations.uninstall,
+                             style: Theme.of(context).textTheme.bodyMedium,
+                             maxLines: 2,
+                             overflow: TextOverflow.ellipsis,
+                           ),
+                         ),
                        ],
                      ),
                      onPressed: () async {
-                       await context.read<AppsService>().uninstallApp(application);
+                       final AppsService appsService = context.read<AppsService>();
                        Navigator.of(context).pop(ApplicationInfoPanelResult.none);
+                       await appsService.uninstallApp(application);
                      },
                    )
                  ]

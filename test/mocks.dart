@@ -20,9 +20,14 @@ import 'dart:math';
 
 import 'package:flauncher/database.dart';
 import 'package:flauncher/flauncher_channel.dart';
+import 'package:flauncher/models/app.dart';
+import 'package:flauncher/models/category.dart';
 import 'package:flauncher/providers/apps_service.dart';
+import 'package:flauncher/providers/memory_service.dart';
 import 'package:flauncher/providers/settings_service.dart';
+import 'package:flauncher/providers/update_service.dart';
 import 'package:flauncher/providers/wallpaper_service.dart';
+import 'package:flauncher/providers/weather_service.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:mockito/annotations.dart';
@@ -34,6 +39,9 @@ import 'package:mockito/annotations.dart';
   AppsService,
   SettingsService,
   ImagePicker,
+  WeatherService,
+  MemoryService,
+  UpdateService,
 ], customMocks: [
   MockSpec<FLauncherDatabase>(unsupportedMembers: {#alias}),
   MockSpec<ImageProvider>(unsupportedMembers: {#alias}),
@@ -45,14 +53,12 @@ App fakeApp({
   String name = "FLauncher",
   String version = "1.0.0",
   bool hidden = false,
-  bool sideloaded = false,
 }) =>
     App(
       packageName: packageName,
       name: name,
       version: version,
       hidden: hidden,
-      sideloaded: sideloaded,
     );
 
 Category fakeCategory({

@@ -20,7 +20,6 @@ import 'package:drift/drift.dart';
 import 'package:flauncher/gradients.dart';
 import 'package:flauncher/providers/wallpaper_service.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:image_picker/image_picker.dart';
 import 'package:mockito/mockito.dart';
 import 'package:path_provider_platform_interface/path_provider_platform_interface.dart';
 import 'package:plugin_platform_interface/plugin_platform_interface.dart';
@@ -37,24 +36,30 @@ void main() {
 
   group("pickWallpaper", () {
     test("picks image", () async {
-      TestWidgetsFlutterBinding.ensureInitialized();
-      final pickedFile = _MockXFile();
-      when(pickedFile.readAsBytes()).thenAnswer((_) => Future.value(Uint8List.fromList([0x01])));
-      final imagePicker = _MockImagePicker();
       final fLauncherChannel = MockFLauncherChannel();
       final settingsService = MockSettingsService();
-      when(imagePicker.pickImage(source: ImageSource.gallery)).thenAnswer((_) => Future.value(pickedFile));
+      when(fLauncherChannel.pickImageBytes()).thenAnswer((_) => Future.value(Uint8List.fromList([0x01])));
       when(fLauncherChannel.checkForGetContentAvailability()).thenAnswer((_) => Future.value(true));
       final wallpaperService = WallpaperService(fLauncherChannel, settingsService);
       await untilCalled(pathProviderPlatform.getApplicationDocumentsPath());
 
       await wallpaperService.pickWallpaper();
 
-      //verify(imagePicker.pickImage(source: ImageSource.gallery));
-      // MissingPluginException(No implementation found for method pickImage on channel plugins.flutter.io/image_picker)
-      //
       expect(wallpaperService.wallpaper.hashCode, 1);
-    }, skip: true);
+    });
+
+    test("keeps existing wallpaper when picker returns no image", () async {
+      final fLauncherChannel = MockFLauncherChannel();
+      final settingsService = MockSettingsService();
+      when(fLauncherChannel.pickImageBytes()).thenAnswer((_) => Future.value(null));
+      when(fLauncherChannel.checkForGetContentAvailability()).thenAnswer((_) => Future.value(true));
+      final wallpaperService = WallpaperService(fLauncherChannel, settingsService);
+      await untilCalled(pathProviderPlatform.getApplicationDocumentsPath());
+
+      await wallpaperService.pickWallpaper();
+
+      expect(wallpaperService.wallpaper, null);
+    });
 
     test("throws error when no file explorer installed", () async {
       final fLauncherChannel = MockFLauncherChannel();
@@ -104,35 +109,6 @@ void main() {
       expect(gradient, FLauncherGradients.grassShampoo);
     });
   });
-}
-
-class _MockImagePicker extends Mock implements ImagePicker {
-  @override
-  Future<XFile?> pickImage({
-    required ImageSource source,
-    double? maxWidth,
-    double? maxHeight,
-    int? imageQuality,
-    CameraDevice preferredCameraDevice = CameraDevice.rear,
-    bool requestFullMetadata = true,
-  }) =>
-      super.noSuchMethod(
-          Invocation.method(#pickImage, [], {
-            #source: source,
-            #maxWidth: maxWidth,
-            #maxHeight: maxHeight,
-            #imageQuality: imageQuality,
-            #preferredCameraDevice: preferredCameraDevice,
-            #requestFullMetadata: requestFullMetadata,
-          }),
-          returnValue: Future<XFile?>.value());
-}
-
-// ignore: must_be_immutable
-class _MockXFile extends Mock implements XFile {
-  @override
-  Future<Uint8List> readAsBytes() => super
-      .noSuchMethod(Invocation.method(#readAsBytes, []), returnValue: Future<Uint8List>.value(Uint8List.fromList([])));
 }
 
 class _MockPathProviderPlatform extends Mock with MockPlatformInterfaceMixin implements PathProviderPlatform {

@@ -23,7 +23,6 @@ import 'package:flauncher/gradients.dart';
 import 'package:flauncher/providers/settings_service.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
-import 'package:image_picker/image_picker.dart';
 import 'package:path_provider/path_provider.dart';
 
 class WallpaperService extends ChangeNotifier {
@@ -61,10 +60,11 @@ class WallpaperService extends ChangeNotifier {
       throw NoFileExplorerException();
     }
 
-    final imagePicker = ImagePicker();
-    final pickedFile = await imagePicker.pickImage(source: ImageSource.gallery);
-    if (pickedFile != null) {
-      Uint8List bytes = await pickedFile.readAsBytes();
+    // 不走 image_picker:它在 Android 11+ 优先打开系统 Photo Picker,不少电视
+    // 盒子的 Photo Picker 对遥控器 D-pad 无响应(无焦点、方向键和返回键失效)。
+    // 原生侧直接用 ACTION_GET_CONTENT(DocumentsUI),支持 D-pad 导航。
+    final bytes = await _fLauncherChannel.pickImageBytes();
+    if (bytes != null) {
       await _wallpaperFile.writeAsBytes(bytes);
 
       _wallpaper = MemoryImage(bytes);

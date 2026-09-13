@@ -142,6 +142,36 @@ void main() {
     expect(getContentAvailable, isTrue);
   });
 
+  test("pickImageBytes returns image bytes", () async {
+    final channel = MethodChannel('me.efesser.flauncher/method');
+    channel.setMockMethodCallHandler((call) async {
+      if (call.method == "pickImageBytes") {
+        return Uint8List.fromList([0x01, 0x02]);
+      }
+      fail("Unhandled method name");
+    });
+    final fLauncherChannel = FLauncherChannel();
+
+    final bytes = await fLauncherChannel.pickImageBytes();
+
+    expect(bytes, Uint8List.fromList([0x01, 0x02]));
+  });
+
+  test("pickImageBytes returns null when cancelled", () async {
+    final channel = MethodChannel('me.efesser.flauncher/method');
+    channel.setMockMethodCallHandler((call) async {
+      if (call.method == "pickImageBytes") {
+        return null;
+      }
+      fail("Unhandled method name");
+    });
+    final fLauncherChannel = FLauncherChannel();
+
+    final bytes = await fLauncherChannel.pickImageBytes();
+
+    expect(bytes, isNull);
+  });
+
   test("startAmbientMode", () async {
     final channel = MethodChannel('me.efesser.flauncher/method');
     bool called = false;

@@ -64,6 +64,11 @@ class FLauncherChannel {
   Future<bool> checkForGetContentAvailability() async =>
       await _methodChannel.invokeMethod("checkForGetContentAvailability");
 
+  /// 打开系统的 DocumentsUI(ACTION_GET_CONTENT)选一张图片,返回原始字节;
+  /// 用户取消或失败时返回 null。
+  Future<Uint8List?> pickImageBytes() async =>
+      await _methodChannel.invokeMethod<Uint8List>("pickImageBytes");
+
   Future<Map<String, dynamic>> getActiveNetworkInformation() async {
     Map<dynamic, dynamic> map = await _methodChannel.invokeMethod("getActiveNetworkInformation");
     return map.cast<String, dynamic>();

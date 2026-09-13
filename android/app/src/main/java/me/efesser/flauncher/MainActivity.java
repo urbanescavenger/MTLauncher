@@ -43,6 +43,8 @@ import io.flutter.plugin.common.MethodChannel;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -63,6 +65,10 @@ public class MainActivity extends FlutterActivity
     private final String METHOD_CHANNEL = "me.efesser.flauncher/method";
     private final String APPS_EVENT_CHANNEL = "me.efesser.flauncher/event_apps";
     private final String NETWORK_EVENT_CHANNEL = "me.efesser.flauncher/event_network";
+
+    private static final int REQUEST_CODE_PICK_IMAGE = 4201;
+
+    private MethodChannel.Result _pendingPickImageResult;
 
     @Override
     public void configureFlutterEngine(@NonNull FlutterEngine flutterEngine)
@@ -88,6 +94,7 @@ public class MainActivity extends FlutterActivity
                 case "canInstallPackages" -> result.success(canInstallPackages());
                 case "openUnknownSourcesSettings" -> result.success(openUnknownSourcesSettings());
                 case "checkForGetContentAvailability" -> result.success(checkForGetContentAvailability());
+                case "pickImageBytes" -> pickImageBytes(result);
                 case "startAmbientMode" -> result.success(startAmbientMode());
                 case "getActiveNetworkInformation" -> result.success(getActiveNetworkInformation());
                 case "getSupportedAbis" -> result.success(Arrays.asList(Build.SUPPORTED_ABIS));
@@ -372,6 +379,66 @@ public class MainActivity extends FlutterActivity
                 0);
 
         return !intentActivities.isEmpty();
+    }
+
+    // 选壁纸用 ACTION_GET_CONTENT(DocumentsUI)而不是 image_picker:image_picker 在
+    // Android 11+ 优先走系统 Photo Picker,不少电视盒子的 Photo Picker 对遥控器
+    // D-pad 无响应(无焦点、方向键和返回键都失效)。DocumentsUI 支持 D-pad 导航。
+    // 成功时把选中图片的原始字节回给 Dart;取消或失败回 null。
+    private void pickImageBytes(MethodChannel.Result result) {
+        if (_pendingPickImageResult != null) {
+            // 上一次选图还没回来,忽略新请求,避免旧的 Result 被顶掉后永远悬空。
+            result.success(null);
+            return;
+        }
+
+        Intent intent = new Intent(Intent.ACTION_GET_CONTENT)
+                .addCategory(Intent.CATEGORY_OPENABLE)
+                .setTypeAndNormalize("image/*");
+
+        try {
+            _pendingPickImageResult = result;
+            startActivityForResult(intent, REQUEST_CODE_PICK_IMAGE);
+        }
+        catch (Exception ignored) {
+            _pendingPickImageResult = null;
+            result.success(null);
+        }
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data)
+    {
+        if (requestCode != REQUEST_CODE_PICK_IMAGE) {
+            super.onActivityResult(requestCode, resultCode, data);
+            return;
+        }
+
+        MethodChannel.Result result = _pendingPickImageResult;
+        _pendingPickImageResult = null;
+
+        if (result == null) {
+            return;
+        }
+
+        byte[] bytes = null;
+
+        if (resultCode == RESULT_OK && data != null && data.getData() != null) {
+            try (InputStream inputStream = getContentResolver().openInputStream(data.getData())) {
+                ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+                byte[] buffer = new byte[64 * 1024];
+                int read;
+                while ((read = inputStream.read(buffer)) != -1) {
+                    outputStream.write(buffer, 0, read);
+                }
+                bytes = outputStream.toByteArray();
+            }
+            catch (IOException | SecurityException ignored) {
+                bytes = null;
+            }
+        }
+
+        result.success(bytes);
     }
 
     private boolean isDefaultLauncher() {

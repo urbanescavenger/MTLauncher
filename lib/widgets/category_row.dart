@@ -41,8 +41,10 @@ class CategoryRow extends StatelessWidget
   Widget build(BuildContext context) {
     // An empty category falls out of this naturally: it renders only the
     // trailing add-app card, which doubles as the empty-state placeholder.
+    // 瓦片 = 卡片(Expanded,尺寸与旧的 rowHeight-16 一致)+ 下方应用名标签;
+    // 行高加出标签空间,ListView 的 8px 垂直内边距吃掉后卡片大小不变。
     Widget categoryContent = SizedBox(
-      height: category.rowHeight.toDouble(),
+      height: category.rowHeight + appCardLabelHeight,
       child: ListView.custom(
         padding: const EdgeInsets.all(8),
         scrollDirection: Axis.horizontal,
@@ -54,9 +56,16 @@ class CategoryRow extends StatelessWidget
               return Padding(
                 key: Key("add-app-${category.id}"),
                 padding: const EdgeInsets.symmetric(horizontal: 8),
-                child: AddAppCard(
-                  category: category,
-                  autofocus: applications.isEmpty
+                child: Column(
+                  children: [
+                    Expanded(
+                      child: AddAppCard(
+                        category: category,
+                        autofocus: applications.isEmpty
+                      )
+                    ),
+                    SizedBox(height: appCardLabelHeight)
+                  ],
                 )
               );
             }
@@ -64,12 +73,19 @@ class CategoryRow extends StatelessWidget
             return Padding(
                 key: Key(applications[index].packageName),
                 padding: const EdgeInsets.symmetric(horizontal: 8),
-                child: AppCard(
-                  category: category,
-                  application: applications[index],
-                  autofocus: index == 0,
-                  onMove: (direction) => _onMove(context, direction, index),
-                  onMoveEnd: () => _onMoveEnd(context)
+                child: Column(
+                  children: [
+                    Expanded(
+                      child: AppCard(
+                        category: category,
+                        application: applications[index],
+                        autofocus: index == 0,
+                        onMove: (direction) => _onMove(context, direction, index),
+                        onMoveEnd: () => _onMoveEnd(context)
+                      )
+                    ),
+                    appCardLabel(context, applications[index].name)
+                  ],
                 )
             );
           }

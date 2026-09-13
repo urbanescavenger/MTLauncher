@@ -43,25 +43,40 @@ class AllAppsGrid extends StatelessWidget {
       gridContent = const SizedBox.shrink();
     }
     else {
-      gridContent = GridView.custom(
-        primary: false,
-        shrinkWrap: true,
-        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: Category.ColumnsCount,
-          childAspectRatio: 16 / 9,
-          mainAxisSpacing: 16,
-          crossAxisSpacing: 16,
-        ),
-        padding: const EdgeInsets.all(16),
-        childrenDelegate: SliverChildBuilderDelegate(
-          childCount: applications.length,
-          findChildIndexCallback: _findChildIndex,
-          (context, index) => AppCard(
-            key: Key(applications[index].packageName),
-            application: applications[index],
-            autofocus: index == 0,
-          ),
-        ),
+      // 瓦片高度 = 卡片(按宽度 16:9)+ 下方应用名标签。
+      gridContent = LayoutBuilder(
+        builder: (context, constraints) {
+          final tileWidth = (constraints.maxWidth - 32 - (Category.ColumnsCount - 1) * 16) / Category.ColumnsCount;
+          final cardHeight = tileWidth * 9 / 16;
+
+          return GridView.custom(
+            primary: false,
+            shrinkWrap: true,
+            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: Category.ColumnsCount,
+              mainAxisExtent: cardHeight + appCardLabelHeight,
+              mainAxisSpacing: 16,
+              crossAxisSpacing: 16,
+            ),
+            padding: const EdgeInsets.all(16),
+            childrenDelegate: SliverChildBuilderDelegate(
+              childCount: applications.length,
+              findChildIndexCallback: _findChildIndex,
+              (context, index) => Column(
+                children: [
+                  Expanded(
+                    child: AppCard(
+                      key: Key(applications[index].packageName),
+                      application: applications[index],
+                      autofocus: index == 0,
+                    ),
+                  ),
+                  appCardLabel(context, applications[index].name)
+                ],
+              ),
+            ),
+          );
+        }
       );
     }
 

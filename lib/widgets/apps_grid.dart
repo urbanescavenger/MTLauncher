@@ -43,33 +43,60 @@ class AppsGrid extends StatelessWidget
   Widget build(BuildContext context) {
     // An empty category falls out of this naturally: it renders only the
     // trailing add-app card, which doubles as the empty-state placeholder.
-    Widget categoryContent = GridView.custom(
-      primary: false,
-      shrinkWrap: true,
-      gridDelegate: _buildSliverGridDelegate(),
-      padding: EdgeInsets.all(16),
-      childrenDelegate: SliverChildBuilderDelegate(
-        childCount: applications.length + 1,
-        findChildIndexCallback: _findChildIndex,
-        (context, index) {
-          if (index == applications.length) {
-            return AddAppCard(
-              key: Key("add-app-${category.id}"),
-              category: category,
-              autofocus: applications.isEmpty,
-            );
-          }
+    // 瓦片高度 = 卡片(按宽度 16:9)+ 下方应用名标签,用 LayoutBuilder 精确算出。
+    Widget categoryContent = LayoutBuilder(
+      builder: (context, constraints) {
+        final tileWidth = (constraints.maxWidth - 32 - (category.columnsCount - 1) * 16) / category.columnsCount;
+        final cardHeight = tileWidth * 9 / 16;
 
-          return AppCard(
-              key: Key(applications[index].packageName),
-              category: category,
-              application: applications[index],
-              autofocus: index == 0,
-              onMove: (direction) => _onMove(context, direction, index),
-              onMoveEnd: () => _saveOrder(context)
-          );
-        }
-      )
+        return GridView.custom(
+          primary: false,
+          shrinkWrap: true,
+          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: category.columnsCount,
+            mainAxisExtent: cardHeight + appCardLabelHeight,
+            mainAxisSpacing: 16,
+            crossAxisSpacing: 16,
+          ),
+          padding: EdgeInsets.all(16),
+          childrenDelegate: SliverChildBuilderDelegate(
+            childCount: applications.length + 1,
+            findChildIndexCallback: _findChildIndex,
+            (context, index) {
+              if (index == applications.length) {
+                return Column(
+                  children: [
+                    Expanded(
+                      child: AddAppCard(
+                        key: Key("add-app-${category.id}"),
+                        category: category,
+                        autofocus: applications.isEmpty,
+                      ),
+                    ),
+                    SizedBox(height: appCardLabelHeight)
+                  ],
+                );
+              }
+
+              return Column(
+                children: [
+                  Expanded(
+                    child: AppCard(
+                        key: Key(applications[index].packageName),
+                        category: category,
+                        application: applications[index],
+                        autofocus: index == 0,
+                        onMove: (direction) => _onMove(context, direction, index),
+                        onMoveEnd: () => _saveOrder(context)
+                    )
+                  ),
+                  appCardLabel(context, applications[index].name)
+                ],
+              );
+            }
+          )
+        );
+      }
     );
 
     return Column(
@@ -138,12 +165,5 @@ class AppsGrid extends StatelessWidget
     final appsService = context.read<AppsService>();
     appsService.saveApplicationOrderInCategory(category);
   }
-
-  SliverGridDelegate _buildSliverGridDelegate() => SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: category.columnsCount,
-        childAspectRatio: 16 / 9,
-        mainAxisSpacing: 16,
-        crossAxisSpacing: 16,
-      );
 
 }

@@ -33,6 +33,28 @@ import '../models/category.dart';
 
 const _validationKeys = [LogicalKeyboardKey.select, LogicalKeyboardKey.enter, LogicalKeyboardKey.gameButtonA];
 
+/// 卡片下方应用名标签占的高度:6px 间距 + 一行文字。容器布局(行高、网格
+/// mainAxisExtent)要为它留出空间,配合 appCardLabel 使用。
+const appCardLabelHeight = 30.0;
+
+/// 卡片下方的应用名标签,白字带柔和黑影,在壁纸上清晰可读。
+Widget appCardLabel(BuildContext context, String name) => Padding(
+  padding: const EdgeInsets.only(top: 6),
+  child: SizedBox(
+    height: appCardLabelHeight - 6,
+    child: Text(
+      name,
+      textAlign: TextAlign.center,
+      maxLines: 1,
+      overflow: TextOverflow.ellipsis,
+      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+        color: Colors.white,
+        shadows: const [Shadow(color: Colors.black54, offset: Offset(0, 2), blurRadius: 8)],
+      ),
+    ),
+  ),
+);
+
 class AppCard extends StatefulWidget
 {
   final App application;

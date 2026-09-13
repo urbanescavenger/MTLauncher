@@ -242,15 +242,20 @@ class UpdateService extends ChangeNotifier {
         asset["size"] as int);
   }
 
-  /// 按设备架构挑 release 的下载资产:优先 `MTlauncher-<tag>-<abi>.apk` 分包,
-  /// 没有对应分包(或旧 release 只发整包)时回落 `MTlauncher-<tag>-universal.apk`。
+  /// 按设备架构挑 release 的下载资产,兼容三代发布命名(新→旧):
+  /// 1. `MTlauncher-<tag>-<abi>.apk` 分包 / `MTlauncher-<tag>-universal.apk` 整包;
+  /// 2. `MTlauncher-<tag>.apk` 单包(如 v1.0.1);
+  /// 3. `MTlauncher-<abi>-release.apk` 分包 / `MTlauncher-universal-release.apk` 整包(如 v1.0.0)。
   Map<String, dynamic> _releaseAsset(Map<String, dynamic> release, String tagName, String? abi) {
     if (abi != null) {
-      final asset = _tryAsset(release, "MTlauncher-$tagName-$abi.apk");
-      if (asset != null) return asset;
+      final split = _tryAsset(release, "MTlauncher-$tagName-$abi.apk")
+          ?? _tryAsset(release, "MTlauncher-$abi-release.apk");
+      if (split != null) return split;
     }
 
-    return _asset(release, "MTlauncher-$tagName-universal.apk");
+    return _tryAsset(release, "MTlauncher-$tagName-universal.apk")
+        ?? _tryAsset(release, "MTlauncher-$tagName.apk")
+        ?? _asset(release, "MTlauncher-universal-release.apk");
   }
 
   Map<String, dynamic>? _tryAsset(Map<String, dynamic> release, String name) {
@@ -324,8 +329,14 @@ class _RemoteRelease {
 /// 把语义版本名解析成可比较的 versionCode,权重与 CI 端算法严格一致
 /// (见 .github/workflows/continuous-release.yml):
 /// major*1000000 + minor*100000 + patch*1000 + label(alpha=1,beta=2,rc=3)*100 + 序号。
-/// 版本名不符合语义版本格式(如旧月度版本以外的异常值)时返回 null。
+/// 旧月度版本(YYYY.MM.NNN,如 2024.11.001)不属于新语义版本序列,一律返回 null:
+/// 远端旧格式 tag 会被跳过,已安装的旧版本由 check() 的 isLegacyMonthlyVersion 提示更新。
+/// 版本名不符合语义版本格式时返回 null。
 int? versionCodeFromVersionName(String versionName) {
+  if (RegExp(r"^\d{4}\.\d{2}\.\d{3}$").hasMatch(versionName)) {
+    return null;
+  }
+
   final match = RegExp(r"^(\d+)\.(\d+)\.(\d+)(?:-([a-zA-Z]+)\.(\d+))?$")
       .firstMatch(versionName);
 

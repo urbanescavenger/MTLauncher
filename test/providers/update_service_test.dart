@@ -33,6 +33,7 @@ void main() {
 
     test("returns null for non-semantic versions", () {
       expect(versionCodeFromVersionName("2024.11.001"), isNull);
+      expect(versionCodeFromVersionName("2026.09.001"), isNull);
       expect(versionCodeFromVersionName("dev"), isNull);
       expect(versionCodeFromVersionName(""), isNull);
     });

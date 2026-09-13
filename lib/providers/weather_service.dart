@@ -31,22 +31,39 @@ const _weatherAutoLocationCacheKey = "weather_auto_location_cache";
 
 const _forecastUrl = "https://api.open-meteo.com/v1/forecast";
 const _geocodingUrl = "https://geocoding-api.open-meteo.com/v1/search";
-const _ipGeolocationUrl = "https://get.geojs.io/v1/ip/geo.json";
+
+/// IP 定位源,按顺序尝试,前一个失败(被墙/超时)就用下一个。三个服务都返回
+/// latitude/longitude/city/country_code 字段,同一解析器即可处理。
+const _ipGeolocationUrls = [
+  "https://get.geojs.io/v1/ip/geo.json",
+  "https://ipwho.is/",
+  "https://api.ip.sb/geoip",
+];
+
+/// 单个 HTTP 请求的超时:不设的话,被墙的连接会永久挂起,把 _refreshing
+/// 卡在 true,后续刷新全部提前返回,表现为"定位中"永远不结束。
+const _requestTimeout = Duration(seconds: 8);
 
 /// How long an IP-resolved location is trusted before re-resolving.
 const _autoLocationMaxAge = Duration(hours: 24);
+
+/// 定位或取数失败后的一次性重试间隔(比 30 分钟的常规刷新快,尽早恢复)。
+const _retryDelay = Duration(minutes: 2);
 
 /// Fetches current weather from Open-Meteo (no API key required) and caches
 /// the last successful result so the card renders instantly on cold boot.
 class WeatherService extends ChangeNotifier {
   final SharedPreferences _sharedPreferences;
   final SettingsService _settingsService;
-  final http.Client _client = http.Client();
+  final http.Client _client;
   Timer? _refreshTimer;
+  Timer? _retryTimer;
   WeatherData? _currentWeather;
   bool _refreshing = false;
 
-  WeatherService(this._sharedPreferences, this._settingsService) {
+  WeatherService(this._sharedPreferences, this._settingsService, {http.Client? client}) :
+    _client = client ?? http.Client()
+  {
     _currentWeather = _restoreCache();
     _settingsService.addListener(_onSettingsChanged);
     _scheduleRefresh();
@@ -92,13 +109,14 @@ class WeatherService extends ChangeNotifier {
       return;
     }
 
+    _retryTimer?.cancel();
     _refreshing = true;
     try {
       var location = this.location;
 
       if (_settingsService.weatherAutoLocation && (location == null || _autoLocationStale)) {
         // First run (no location yet) or a stale one: resolve via IP. On
-        // failure keep whatever is cached and retry on the next tick.
+        // failure keep whatever is cached and retry after a short delay.
         if (await _resolveAutoLocation()) {
           location = _autoLocation;
           notifyListeners();
@@ -106,6 +124,7 @@ class WeatherService extends ChangeNotifier {
       }
 
       if (location == null) {
+        _scheduleRetry();
         return;
       }
 
@@ -122,10 +141,14 @@ class WeatherService extends ChangeNotifier {
         await _sharedPreferences.setString(_weatherCacheKey, jsonEncode(_currentWeather!.toJson()));
         notifyListeners();
       }
+      else {
+        _scheduleRetry();
+      }
     }
     catch (e) {
-      // Keep showing the cached weather; retry on the next tick.
+      // Keep showing the cached weather; retry after a short delay.
       debugPrint("Weather refresh failed: $e");
+      _scheduleRetry();
     }
     finally {
       _refreshing = false;
@@ -135,6 +158,7 @@ class WeatherService extends ChangeNotifier {
   @override
   void dispose() {
     _refreshTimer?.cancel();
+    _retryTimer?.cancel();
     _settingsService.removeListener(_onSettingsChanged);
     _client.close();
     super.dispose();
@@ -170,6 +194,11 @@ class WeatherService extends ChangeNotifier {
     }
   }
 
+  void _scheduleRetry() {
+    _retryTimer?.cancel();
+    _retryTimer = Timer(_retryDelay, refresh);
+  }
+
   WeatherLocation? get _autoLocation {
     final json = _sharedPreferences.getString(_weatherAutoLocationCacheKey);
     if (json == null || json.isEmpty) {
@@ -199,36 +228,42 @@ class WeatherService extends ChangeNotifier {
     }
   }
 
-  /// Resolves the approximate location from the device's public IP (GeoJS,
-  /// no API key). Returns false when the lookup fails.
+  /// Resolves the approximate location from the device's public IP, trying
+  /// [_ipGeolocationUrls] in order (some providers are unreachable from some
+  /// networks, e.g. GeoJS from mainland China). Returns false when every
+  /// lookup fails.
   Future<bool> _resolveAutoLocation() async {
-    try {
-      final body = await _getJson(_ipGeolocationUrl);
-      final latitude = double.tryParse(body["latitude"]?.toString() ?? "");
-      final longitude = double.tryParse(body["longitude"]?.toString() ?? "");
-      final name = body["city"]?.toString() ?? "";
-      final countryCode = body["country_code"]?.toString() ?? "";
+    for (final url in _ipGeolocationUrls) {
+      try {
+        final body = await _getJson(url);
+        final latitude = double.tryParse(body["latitude"]?.toString() ?? "");
+        final longitude = double.tryParse(body["longitude"]?.toString() ?? "");
+        // 城市缺失时退到 region/country,保证有坐标就能定位。
+        final name = (body["city"] ?? body["region"] ?? body["country"])?.toString() ?? "";
+        final countryCode = body["country_code"]?.toString() ?? "";
 
-      if (latitude == null || longitude == null || name.isEmpty) {
-        return false;
+        if (latitude == null || longitude == null) {
+          continue;
+        }
+
+        final location = WeatherLocation(
+            name: name,
+            countryCode: countryCode,
+            latitude: latitude,
+            longitude: longitude
+        );
+        await _sharedPreferences.setString(_weatherAutoLocationCacheKey, jsonEncode({
+          "location": location.toJson(),
+          "resolved_at": DateTime.now().toIso8601String(),
+        }));
+        return true;
       }
+      catch (e) {
+        debugPrint("IP location lookup failed ($url): $e");
+      }
+    }
 
-      final location = WeatherLocation(
-          name: name,
-          countryCode: countryCode,
-          latitude: latitude,
-          longitude: longitude
-      );
-      await _sharedPreferences.setString(_weatherAutoLocationCacheKey, jsonEncode({
-        "location": location.toJson(),
-        "resolved_at": DateTime.now().toIso8601String(),
-      }));
-      return true;
-    }
-    catch (e) {
-      debugPrint("IP location lookup failed: $e");
-      return false;
-    }
+    return false;
   }
 
   Future<dynamic> _getJson(String url) async {
@@ -246,9 +281,11 @@ class WeatherService extends ChangeNotifier {
 
     for (var attempt = 1; attempt <= 3; attempt++) {
       try {
-        final response = await _client.get(Uri.parse(url), headers: {
-          "User-Agent": "MTLauncher-Android",
-        });
+        final response = await _client
+            .get(Uri.parse(url), headers: {
+              "User-Agent": "MTLauncher-Android",
+            })
+            .timeout(_requestTimeout);
 
         if (response.statusCode < 500) {
           return response;

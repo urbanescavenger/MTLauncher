@@ -583,7 +583,8 @@ public class MainActivity extends FlutterActivity
                 bytes = null;
             }
 
-            runOnUiThread(() -> result.success(bytes));
+            final byte[] resultBytes = bytes;
+            runOnUiThread(() -> result.success(resultBytes));
         }).start();
     }
 

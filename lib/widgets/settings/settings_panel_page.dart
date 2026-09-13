@@ -166,6 +166,12 @@ class SettingsPanelPage extends StatelessWidget {
                       title: Text(localizations.showCategoryTitles, style: Theme.of(context).textTheme.bodyMedium),
                       secondary: Icon(Icons.abc)
                   ),
+                  RoundedSwitchListTile(
+                      value: settingsService.showAppNames,
+                      onChanged: (value) => settingsService.setShowAppNames(value),
+                      title: Text(localizations.showAppNames, style: Theme.of(context).textTheme.bodyMedium),
+                      secondary: Icon(Icons.label_outline)
+                  ),
                   const Divider(),
                   Consumer<UpdateService>(
                     builder: (context, updateService, __) => TextButton(

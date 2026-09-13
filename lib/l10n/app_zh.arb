@@ -69,6 +69,7 @@
     "settings": "设置",
     "show": "显示",
     "showCategoryTitles": "显示分类标题",
+    "showAppNames": "卡片下方显示应用名",
     "sort": "排序",
     "systemSettings": "系统设置",
     "textAboutDialog": "MTLauncher 是一个开源的 Android TV 第三方桌面启动器。\n源代码:{repoUrl}。\n\n基于 FLauncher(图标由 Katie (@fureturoe) 设计,界面由 @FXCostanzo 设计)。",

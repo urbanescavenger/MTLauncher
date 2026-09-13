@@ -31,6 +31,7 @@ const _dateFormat = "date_format";
 const _favoriteCategoryIdKey = "favorite_category_id";
 const _localeKey = "locale";
 const _showCategoryTitles = "show_category_titles";
+const _showAppNamesKey = "show_app_names";
 const _showDateInStatusBar = "show_date_in_status_bar";
 const _showMemoryInStatusBar = "show_memory_in_status_bar";
 const _showTimeInStatusBar = "show_time_in_status_bar";
@@ -81,6 +82,9 @@ class SettingsService extends ChangeNotifier {
 
   bool get weatherAutoLocation => _sharedPreferences.getBool(_weatherAutoLocationKey) ?? true;
 
+  /// 卡片下方是否显示应用名(所有应用页不受此开关影响,始终显示)。
+  bool get showAppNames => _sharedPreferences.getBool(_showAppNamesKey) ?? true;
+
   String? get weatherLocationJson {
     final value = _sharedPreferences.getString(_weatherLocationKey);
     return value == null || value.isEmpty ? null : value;
@@ -97,6 +101,10 @@ class SettingsService extends ChangeNotifier {
 
   Future<void> setAppHighlightAnimationEnabled(bool value) async {
     return set(_appHighlightAnimationEnabledKey, value);
+  }
+
+  Future<void> setShowAppNames(bool value) async {
+    return set(_showAppNamesKey, value);
   }
 
   Future<void> setAppKeyClickEnabled(bool value) async {

@@ -97,6 +97,7 @@
     "settings": "Ajustes",
     "show": "Mostrar",
     "showCategoryTitles": "Mostrar títulos de categorías",
+    "showAppNames": "Mostrar nombres de aplicaciones",
     "sort": "Orden",
     "systemSettings": "Ajustes del sistema",
     "textAboutDialog": "MTLauncher es un lanzador de aplicaciones alternativo de código abierto para Android TV.\nCódigo fuente disponible en {repoUrl}.\n\nBasado en FLauncher (logo creado por Katie (@fureturoe) y diseño por @FXCostanzo).",

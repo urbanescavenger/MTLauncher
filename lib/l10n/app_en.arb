@@ -93,6 +93,7 @@
     "settings": "Settings",
     "show": "Show",
     "showCategoryTitles": "Show category titles",
+    "showAppNames": "Show app names under cards",
     "sort": "Sort",
     "systemSettings": "System settings",
     "textAboutDialog": "MTLauncher is an open-source alternative launcher for Android TV.\nSource code available at {repoUrl}.\n\nBased on FLauncher (logo by Katie (@fureturoe), design by @FXCostanzo).",

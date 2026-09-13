@@ -41,57 +41,102 @@ class CategoryRow extends StatelessWidget
   Widget build(BuildContext context) {
     // An empty category falls out of this naturally: it renders only the
     // trailing add-app card, which doubles as the empty-state placeholder.
-    // 瓦片 = 卡片(Expanded,尺寸与旧的 rowHeight-16 一致)+ 下方应用名标签;
-    // 行高加出标签空间,ListView 的 8px 垂直内边距吃掉后卡片大小不变。
-    Widget categoryContent = SizedBox(
-      height: category.rowHeight + appCardLabelHeight,
-      child: ListView.custom(
-        padding: const EdgeInsets.all(8),
-        scrollDirection: Axis.horizontal,
-        childrenDelegate: SliverChildBuilderDelegate(
-          childCount: applications.length + 1,
-          findChildIndexCallback: _findChildIndex,
-          (context, index) {
-            if (index == applications.length) {
-              return Padding(
-                key: Key("add-app-${category.id}"),
-                padding: const EdgeInsets.symmetric(horizontal: 8),
-                child: Column(
-                  children: [
-                    Expanded(
-                      child: AddAppCard(
-                        category: category,
-                        autofocus: applications.isEmpty
-                      )
-                    ),
-                    SizedBox(height: appCardLabelHeight)
-                  ],
-                )
-              );
-            }
+    // 显示应用名时:瓦片 = 卡片(Expanded,尺寸与旧的 rowHeight-16 一致)+
+    // 下方应用名标签;行高加出标签空间,ListView 的 8px 垂直内边距吃掉后
+    // 卡片大小不变。关闭时恢复旧的纯卡片布局。
+    return Selector<SettingsService, bool>(
+      selector: (context, service) => service.showAppNames,
+      builder: (context, showAppNames, _) {
+        final tileHeight = showAppNames ? category.rowHeight + appCardLabelHeight : category.rowHeight;
 
-            return Padding(
-                key: Key(applications[index].packageName),
-                padding: const EdgeInsets.symmetric(horizontal: 8),
-                child: Column(
-                  children: [
-                    Expanded(
-                      child: AppCard(
-                        category: category,
-                        application: applications[index],
-                        autofocus: index == 0,
-                        onMove: (direction) => _onMove(context, direction, index),
-                        onMoveEnd: () => _onMoveEnd(context)
-                      )
+        Widget categoryContent = SizedBox(
+          height: tileHeight.toDouble(),
+          child: ListView.custom(
+            padding: const EdgeInsets.all(8),
+            scrollDirection: Axis.horizontal,
+            childrenDelegate: SliverChildBuilderDelegate(
+              childCount: applications.length + 1,
+              findChildIndexCallback: _findChildIndex,
+              (context, index) {
+                if (index == applications.length) {
+                  return Padding(
+                    key: Key("add-app-${category.id}"),
+                    padding: const EdgeInsets.symmetric(horizontal: 8),
+                    child: showAppNames
+                        ? Column(
+                            children: [
+                              Expanded(child: AddAppCard(
+                                category: category,
+                                autofocus: applications.isEmpty
+                              )),
+                              SizedBox(height: appCardLabelHeight)
+                            ],
+                          )
+                        : AddAppCard(
+                            category: category,
+                            autofocus: applications.isEmpty
+                          )
+                  );
+                }
+
+                return Padding(
+                    key: Key(applications[index].packageName),
+                    padding: const EdgeInsets.symmetric(horizontal: 8),
+                    child: showAppNames
+                        ? Column(
+                            children: [
+                              Expanded(
+                                child: AppCard(
+                                  category: category,
+                                  application: applications[index],
+                                  autofocus: index == 0,
+                                  onMove: (direction) => _onMove(context, direction, index),
+                                  onMoveEnd: () => _onMoveEnd(context)
+                                )
+                              ),
+                              appCardLabel(context, applications[index].name)
+                            ],
+                          )
+                        : AppCard(
+                            category: category,
+                            application: applications[index],
+                            autofocus: index == 0,
+                            onMove: (direction) => _onMove(context, direction, index),
+                            onMoveEnd: () => _onMoveEnd(context)
+                          )
+                );
+              }
+            )
+          )
+        );
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Selector<SettingsService, bool>(
+              selector: (context, service) => service.showCategoryTitles,
+              builder: (context, showCategoriesTitle, _) {
+                if (showCategoriesTitle) {
+                  return Padding(
+                    padding: const EdgeInsets.only(left: 16, bottom: 8),
+                    child: Text(category.name,
+                      style: Theme.of(context)
+                          .textTheme
+                          .titleLarge!
+                          .copyWith(shadows: [const Shadow(color: Colors.black54, offset: Offset(1, 1), blurRadius: 8)])
                     ),
-                    appCardLabel(context, applications[index].name)
-                  ],
-                )
-            );
-          }
-        )
-      )
+                  );
+                }
+
+                return SizedBox.shrink();
+              }
+            ),
+            categoryContent
+          ],
+        );
+      }
     );
+  }
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,

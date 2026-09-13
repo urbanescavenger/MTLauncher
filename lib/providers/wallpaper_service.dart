@@ -65,11 +65,16 @@ class WallpaperService extends ChangeNotifier {
     // 原生侧直接用 ACTION_GET_CONTENT(DocumentsUI),支持 D-pad 导航。
     final bytes = await _fLauncherChannel.pickImageBytes();
     if (bytes != null) {
-      await _wallpaperFile.writeAsBytes(bytes);
-
-      _wallpaper = MemoryImage(bytes);
-      notifyListeners();
+      await setWallpaperBytes(bytes);
     }
+  }
+
+  /// 用图片原始字节直接设置壁纸(应用内相册浏览器选图后走这里)。
+  Future<void> setWallpaperBytes(Uint8List bytes) async {
+    await _wallpaperFile.writeAsBytes(bytes);
+
+    _wallpaper = MemoryImage(bytes);
+    notifyListeners();
   }
 
   Future<void> setGradient(FLauncherGradient fLauncherGradient) async {

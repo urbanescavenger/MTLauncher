@@ -69,6 +69,20 @@ class FLauncherChannel {
   Future<Uint8List?> pickImageBytes() async =>
       await _methodChannel.invokeMethod<Uint8List>("pickImageBytes");
 
+  /// 请求读取相册(MediaStore 图片)的权限;已授权返回 true,被拒绝返回 false。
+  Future<bool> requestImageLibraryAccess() async =>
+      await _methodChannel.invokeMethod("requestImageLibraryAccess");
+
+  /// 返回最新的至多 200 张相册图片,每项 {id: int, thumb: Uint8List(JPEG 缩略图)}。
+  Future<List<Map<dynamic, dynamic>>> getGalleryImages() async {
+    List<Map<dynamic, dynamic>>? images = await _methodChannel.invokeListMethod("getGalleryImages");
+    return images!;
+  }
+
+  /// 按相册条目 id 返回原图原始字节;失败返回 null。
+  Future<Uint8List?> getGalleryImageBytes(int id) async =>
+      await _methodChannel.invokeMethod<Uint8List>("getGalleryImageBytes", id);
+
   Future<Map<String, dynamic>> getActiveNetworkInformation() async {
     Map<dynamic, dynamic> map = await _methodChannel.invokeMethod("getActiveNetworkInformation");
     return map.cast<String, dynamic>();

@@ -73,6 +73,9 @@
     "open": "Open",
     "orSelectFormatSpecifiers": "Or select format specifiers",
     "picture": "Picture",
+    "galleryTitle": "Choose a picture",
+    "galleryBrowseFiles": "Browse files…",
+    "galleryNoImages": "No pictures found on this device.",
     "removeFrom": "Remove from {name}",
     "@removeFrom": {
         "placeholders": {

@@ -18,17 +18,23 @@
 
 package me.efesser.flauncher;
 
+import android.Manifest;
 import android.app.ActivityManager;
+import android.content.ContentResolver;
+import android.content.ContentUris;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.*;
+import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
+import android.graphics.Size;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.net.ConnectivityManager;
 import android.net.Uri;
 import android.os.Build;
+import android.provider.MediaStore;
 import android.provider.Settings;
 import android.util.Pair;
 
@@ -95,6 +101,9 @@ public class MainActivity extends FlutterActivity
                 case "openUnknownSourcesSettings" -> result.success(openUnknownSourcesSettings());
                 case "checkForGetContentAvailability" -> result.success(checkForGetContentAvailability());
                 case "pickImageBytes" -> pickImageBytes(result);
+                case "requestImageLibraryAccess" -> requestImageLibraryAccess(result);
+                case "getGalleryImages" -> getGalleryImages(result);
+                case "getGalleryImageBytes" -> getGalleryImageBytes(result, call.arguments());
                 case "startAmbientMode" -> result.success(startAmbientMode());
                 case "getActiveNetworkInformation" -> result.success(getActiveNetworkInformation());
                 case "getSupportedAbis" -> result.success(Arrays.asList(Build.SUPPORTED_ABIS));
@@ -439,6 +448,143 @@ public class MainActivity extends FlutterActivity
         }
 
         result.success(bytes);
+    }
+
+    // ---- 应用内相册选图 --------------------------------------------------
+    // 系统 Photo Picker 和 DocumentsUI 在不少电视盒子上对遥控器 D-pad 无响应,
+    // 所以选壁纸改走应用内相册浏览器:读 MediaStore 的图片缩略图网格给 Flutter
+    // 渲染(焦点遍历用 launcher 自己的逻辑),选中后再读原图字节。
+
+    private static final int REQUEST_CODE_IMAGE_PERMISSION = 4202;
+
+    private MethodChannel.Result _pendingImagePermissionResult;
+
+    private String imageReadPermission() {
+        return Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU
+                ? Manifest.permission.READ_MEDIA_IMAGES
+                : Manifest.permission.READ_EXTERNAL_STORAGE;
+    }
+
+    private boolean hasImageLibraryPermission() {
+        // Android 6.0 之前没有运行时权限,安装时即授予。
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
+            return true;
+        }
+
+        return checkSelfPermission(imageReadPermission()) == PackageManager.PERMISSION_GRANTED;
+    }
+
+    // 返回 true 表示已有(或刚被用户授予)相册读权限;拒绝时 Dart 端回落 DocumentsUI。
+    private void requestImageLibraryAccess(MethodChannel.Result result) {
+        if (hasImageLibraryPermission()) {
+            result.success(true);
+            return;
+        }
+
+        _pendingImagePermissionResult = result;
+        requestPermissions(new String[]{imageReadPermission()}, REQUEST_CODE_IMAGE_PERMISSION);
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults)
+    {
+        if (requestCode == REQUEST_CODE_IMAGE_PERMISSION) {
+            MethodChannel.Result result = _pendingImagePermissionResult;
+            _pendingImagePermissionResult = null;
+
+            if (result != null) {
+                result.success(grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED);
+            }
+            return;
+        }
+
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+    }
+
+    // 返回最新的至多 200 张图,每张 {id, thumb(JPEG 字节,≤320px)}。后台线程执行。
+    private void getGalleryImages(MethodChannel.Result result) {
+        new Thread(() -> {
+            List<Map<String, Object>> images = new ArrayList<>();
+
+            try {
+                if (!hasImageLibraryPermission()) {
+                    result.success(images);
+                    return;
+                }
+
+                ContentResolver contentResolver = getContentResolver();
+                try (Cursor cursor = contentResolver.query(
+                        MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
+                        new String[]{MediaStore.Images.Media._ID},
+                        null,
+                        null,
+                        MediaStore.Images.Media.DATE_ADDED + " DESC")) {
+                    int count = 0;
+                    while (cursor != null && cursor.moveToNext() && count < 200) {
+                        long id = cursor.getLong(0);
+                        Uri uri = ContentUris.withAppendedId(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, id);
+                        Bitmap thumbnail = loadThumbnail(contentResolver, id, uri);
+
+                        if (thumbnail == null) {
+                            continue;
+                        }
+
+                        ByteArrayOutputStream stream = new ByteArrayOutputStream();
+                        thumbnail.compress(Bitmap.CompressFormat.JPEG, 80, stream);
+
+                        Map<String, Object> map = new HashMap<>();
+                        map.put("id", id);
+                        map.put("thumb", stream.toByteArray());
+                        images.add(map);
+                        count++;
+                    }
+                }
+            }
+            catch (Exception ignored) {
+            }
+
+            runOnUiThread(() -> result.success(images));
+        }).start();
+    }
+
+    private Bitmap loadThumbnail(ContentResolver contentResolver, long id, Uri uri) {
+        try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                return contentResolver.loadThumbnail(uri, new Size(320, 320), null);
+            }
+            return MediaStore.Images.Thumbnails
+                    .getThumbnail(contentResolver, id, MediaStore.Images.Thumbnails.MINI_KIND, null);
+        }
+        catch (Exception ignored) {
+            return null;
+        }
+    }
+
+    // 按相册条目 id 读原图原始字节;失败或用户未授权时回 null。
+    private void getGalleryImageBytes(MethodChannel.Result result, Object arguments) {
+        new Thread(() -> {
+            byte[] bytes = null;
+
+            try {
+                long id = ((Number) arguments).longValue();
+                Uri uri = ContentUris.withAppendedId(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, id);
+
+                try (InputStream inputStream = getContentResolver().openInputStream(uri)) {
+                    ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+                    byte[] buffer = new byte[64 * 1024];
+                    int read;
+                    while ((read = inputStream.read(buffer)) != -1) {
+                        outputStream.write(buffer, 0, read);
+                    }
+                    bytes = outputStream.toByteArray();
+                }
+            }
+            catch (Exception ignored) {
+                bytes = null;
+            }
+
+            runOnUiThread(() -> result.success(bytes));
+        }).start();
     }
 
     private boolean isDefaultLauncher() {

@@ -146,32 +146,6 @@ class AppsGrid extends StatelessWidget
     );
   }
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Selector<SettingsService, bool>(
-          selector: (context, service) => service.showCategoryTitles,
-          builder: (context, showCategoriesTitle, _) {
-            if (showCategoriesTitle) {
-              return Padding(
-                padding: const EdgeInsets.only(left: 16, bottom: 8),
-                child: Text(category.name,
-                  style: Theme.of(context)
-                      .textTheme
-                      .titleLarge!
-                      .copyWith(shadows: [const Shadow(color: Colors.black54, offset: Offset(1, 1), blurRadius: 8)])
-                ),
-              );
-            }
-
-            return SizedBox.shrink();
-          }
-        ),
-        categoryContent
-      ],
-    );
-  }
-
   int _findChildIndex(Key key) =>
       applications.indexWhere((app) => app.packageName == (key as ValueKey<String>).value);
 

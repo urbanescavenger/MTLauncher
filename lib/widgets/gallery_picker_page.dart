@@ -105,7 +105,7 @@ class GalleryPickerPage extends StatelessWidget {
   }
 }
 
-class _GalleryTile extends StatelessWidget {
+class _GalleryTile extends StatefulWidget {
   final GalleryImage image;
   final bool autofocus;
   final Future<Uint8List?> Function(int id) resolveImage;
@@ -113,31 +113,52 @@ class _GalleryTile extends StatelessWidget {
   const _GalleryTile({required this.image, required this.autofocus, required this.resolveImage});
 
   @override
-  Widget build(BuildContext context) => Focus(
-    autofocus: autofocus,
-    child: Builder(
-      builder: (context) {
-        final focused = Focus.of(context).hasFocus;
+  State<_GalleryTile> createState() => _GalleryTileState();
+}
 
-        return InkWell(
-          onTap: () async {
-            final bytes = await resolveImage(image.id);
-            if (bytes != null && context.mounted) {
-              Navigator.of(context).pop(GalleryPickerResult.picked(bytes));
-            }
-          },
-          child: Container(
-            decoration: BoxDecoration(
-              border: Border.all(color: focused ? Colors.white : Colors.transparent, width: 3),
-              borderRadius: BorderRadius.circular(4),
-            ),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(2),
-              child: Image.memory(image.thumbnail, fit: BoxFit.cover, gaplessPlayback: true),
-            ),
-          ),
-        );
+class _GalleryTileState extends State<_GalleryTile> {
+  final FocusNode _focusNode = FocusNode();
+  bool _focused = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _focusNode.addListener(_onFocusChanged);
+  }
+
+  void _onFocusChanged() {
+    setState(() => _focused = _focusNode.hasFocus);
+  }
+
+  @override
+  void dispose() {
+    _focusNode.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    // 焦点节点必须长在 InkWell 自己身上:外面再包一层 Focus 的话,主焦点在
+    // 包装层,确定键的 ActivateIntent 派发不到 InkWell 的 onTap。
+    return InkWell(
+      focusNode: _focusNode,
+      autofocus: widget.autofocus,
+      onTap: () async {
+        final bytes = await widget.resolveImage(widget.image.id);
+        if (bytes != null && context.mounted) {
+          Navigator.of(context).pop(GalleryPickerResult.picked(bytes));
+        }
       },
-    ),
-  );
+      child: Container(
+        decoration: BoxDecoration(
+          border: Border.all(color: _focused ? Colors.white : Colors.transparent, width: 3),
+          borderRadius: BorderRadius.circular(4),
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(2),
+          child: Image.memory(widget.image.thumbnail, fit: BoxFit.cover, gaplessPlayback: true),
+        ),
+      ),
+    );
+  }
 }

@@ -116,6 +116,16 @@ class FLauncherChannel {
         Map<dynamic, dynamic> eventMap = event;
         listener(eventMap.cast<String, dynamic>());
       });
+
+  /// 注册桌面键(HOME)回调:Android 端在 onNewIntent 里收到重新分发的 HOME
+  /// intent 时转发过来。
+  void setHomeKeyPressedListener(void Function() listener) {
+    _methodChannel.setMethodCallHandler((call) async {
+      if (call.method == "homeKeyPressed") {
+        listener();
+      }
+    });
+  }
 }
 
 class MemoryInfo

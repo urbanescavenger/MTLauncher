@@ -76,6 +76,9 @@ public class MainActivity extends FlutterActivity
 
     private MethodChannel.Result _pendingPickImageResult;
 
+    // 保存引用供 onNewIntent 转发桌面键(HOME)事件用。
+    private MethodChannel methodChannel;
+
     @Override
     public void configureFlutterEngine(@NonNull FlutterEngine flutterEngine)
     {
@@ -83,7 +86,8 @@ public class MainActivity extends FlutterActivity
 
         BinaryMessenger messenger = flutterEngine.getDartExecutor().getBinaryMessenger();
 
-        new MethodChannel(messenger, METHOD_CHANNEL).setMethodCallHandler((call, result) -> {
+        methodChannel = new MethodChannel(messenger, METHOD_CHANNEL);
+        methodChannel.setMethodCallHandler((call, result) -> {
             switch (call.method)
             {
                 case "getApplications" -> result.success(getApplications());
@@ -118,6 +122,25 @@ public class MainActivity extends FlutterActivity
 
         new EventChannel(messenger, NETWORK_EVENT_CHANNEL).setStreamHandler(
                 new NetworkEventStreamHandler(this));
+    }
+
+    // 桌面键(HOME)按下时,系统重新分发 HOME intent;launcher 是 singleTask,复用已有
+    // 实例并回调 onNewIntent(launcher 已在前台时同样触发)。转发给 Dart 端,让它回到
+    // 主桌面,而不是停在离开时的页面和焦点位置上。
+    @Override
+    public void onNewIntent(@NonNull Intent intent)
+    {
+        super.onNewIntent(intent);
+
+        Set<String> categories = intent.getCategories();
+        boolean isHomeIntent = Intent.ACTION_MAIN.equals(intent.getAction())
+                && (categories == null || categories.isEmpty()
+                    || categories.contains(Intent.CATEGORY_HOME)
+                    || categories.contains(Intent.CATEGORY_LEANBACK_LAUNCHER));
+
+        if (isHomeIntent && methodChannel != null) {
+            methodChannel.invokeMethod("homeKeyPressed", null);
+        }
     }
 
     private List<Map<String, Serializable>> getApplications() {

@@ -55,6 +55,17 @@ class LauncherState extends ChangeNotifier
     }
   }
 
+  /// 桌面键(HOME):回到主桌面(收藏页);当时钟全屏视图打开时一并恢复桌面。
+  /// 页面切换会让旧卡片卸载、焦点掉到根作用域,由 FocusGuard 自动聚焦主桌面
+  /// 第一个应用卡片。已经在主桌面时不动作,不打断当前焦点。
+  void handleHomeKey() {
+    if (!_launcherVisible || _currentPage != favoritesPage) {
+      _launcherVisible = true;
+      _currentPage = favoritesPage;
+      notifyListeners();
+    }
+  }
+
   /// Moves forward one page. When [skipCategories] is set and there is
   /// nothing to show on the categories page, jumps straight to the all-apps
   /// page instead.

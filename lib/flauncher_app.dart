@@ -31,6 +31,9 @@ import 'flauncher.dart';
 
 class FLauncherApp extends StatelessWidget
 {
+  /// 根导航器 key,供桌面键(HOME)回调退掉设置面板等所有上层路由。
+  static final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
+
   static const PrioritizedIntents _backIntents = PrioritizedIntents(orderedIntents: [
     DismissIntent(),
     BackIntent()
@@ -63,6 +66,7 @@ class FLauncherApp extends StatelessWidget
 
     return MaterialApp(
       locale: locale,
+      navigatorKey: navigatorKey,
       shortcuts: {
         ...WidgetsApp.defaultShortcuts,
         const SingleActivator(LogicalKeyboardKey.escape): _backIntents,

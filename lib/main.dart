@@ -42,6 +42,13 @@ Future<void> main() async {
   final sharedPreferences = await SharedPreferences.getInstance();
   final fLauncherChannel = FLauncherChannel();
   final fLauncherDatabase = FLauncherDatabase(connect());
+  final LauncherState launcherState = LauncherState();
+
+  // 桌面键(HOME):退掉设置面板等所有上层路由,回到主桌面第一页。
+  fLauncherChannel.setHomeKeyPressedListener(() {
+    FLauncherApp.navigatorKey.currentState?.popUntil((route) => route.isFirst);
+    launcherState.handleHomeKey();
+  });
 
   runApp(MultiProvider(
       providers: [
@@ -54,7 +61,7 @@ Future<void> main() async {
                 Provider.of<SettingsService>(context, listen: false))
         ),
         ChangeNotifierProvider(create: (_) => AppsService(fLauncherChannel, fLauncherDatabase, sharedPreferences)),
-        ChangeNotifierProvider(create: (_) => LauncherState()),
+        ChangeNotifierProvider<LauncherState>.value(value: launcherState),
         ChangeNotifierProvider(create: (_) => NetworkService(fLauncherChannel)),
         ChangeNotifierProvider(create: (_) => MemoryService(fLauncherChannel)),
         ChangeNotifierProvider(create: (_) => UpdateService(fLauncherChannel)),

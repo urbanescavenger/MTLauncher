@@ -28,7 +28,6 @@ import android.content.pm.*;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
-import android.graphics.Size;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.net.ConnectivityManager;
@@ -37,6 +36,7 @@ import android.os.Build;
 import android.provider.MediaStore;
 import android.provider.Settings;
 import android.util.Pair;
+import android.util.Size;
 
 import androidx.annotation.NonNull;
 import androidx.core.content.FileProvider;
